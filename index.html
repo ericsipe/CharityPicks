@@ -31,6 +31,18 @@
   button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   .meta button { margin-left: 8px; }
   pre { margin: 8px 0 0; font: inherit; white-space: pre; overflow-x: auto; }
+  .picks { margin: 8px 0 0; display: grid; grid-template-columns: max-content max-content 1fr; column-gap: 14px; row-gap: 2px; }
+  .picks .team { white-space: nowrap; }
+  .picks .spread { text-align: right; white-space: nowrap; }
+  .picks .result { white-space: nowrap; }
+  .picks .result .detail { color: var(--mute); }
+  @media (max-width: 600px) {
+    body { padding: 20px 12px 48px; font-size: 14px; }
+    #season { font-size: 12px; }
+    .picks { grid-template-columns: max-content max-content 1fr; row-gap: 8px; }
+    .picks .result { white-space: normal; }
+    .picks .result .detail { display: block; }
+  }
   .weeks { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
   .entry { border-top: 1px solid var(--rule); padding: 14px 0 12px; }
   .entry:last-child { border-bottom: 1px solid var(--rule); }
@@ -132,7 +144,7 @@ async function fetchWeek(i) {
 }
 
 function grade(team, spread, g) {
-  if (!g) return { cls: "pend", text: "no game found — check abbreviation", pts: 0, live: 0, done: true };
+  if (!g) return { cls: "pend", word: "no game found", detail: "check abbreviation", pts: 0, live: 0, done: true };
   const isAway = g.away === team;
   const opp = isAway ? g.home : g.away;
   const me = isAway ? g.as : g.hs, them = isAway ? g.hs : g.as;
@@ -140,16 +152,16 @@ function grade(team, spread, g) {
   const adj = (me - them) + spread;
   if (g.state === "pre") {
     const t = g.kickoff.toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" });
-    return { cls: "pend", text: `${t} CT   vs ${opp}`, pts: 0, live: 0, done: false };
+    return { cls: "pend", word: `vs ${opp}`, detail: `${t} CT`, pts: 0, live: 0, done: false };
   }
   if (g.state === "post") {
-    if (adj > 0) return { cls: "win",  text: `CORRECT      ${score}`, pts: 1, live: 0, done: true };
-    if (adj < 0) return { cls: "loss", text: `INCORRECT    ${score}`, pts: 0, live: 0, done: true };
-    return               { cls: "pend", text: `PUSH         ${score}`, pts: 0, live: 0, done: true };
+    if (adj > 0) return { cls: "win",  word: "CORRECT",   detail: score, pts: 1, live: 0, done: true };
+    if (adj < 0) return { cls: "loss", word: "INCORRECT", detail: score, pts: 0, live: 0, done: true };
+    return               { cls: "pend", word: "PUSH",      detail: score, pts: 0, live: 0, done: true };
   }
   const clock = g.detail.replace(/\s+-\s+/, " ");
-  const word = adj > 0 ? "winning " : adj < 0 ? "losing  " : "push    ";
-  return { cls: "live", text: `${word} ${score}  (${clock})`, pts: 0, live: adj > 0 ? 1 : 0, done: false };
+  const word = adj > 0 ? "winning" : adj < 0 ? "losing" : "push";
+  return { cls: "live", word, detail: `${score}  (${clock})`, pts: 0, live: adj > 0 ? 1 : 0, done: false };
 }
 
 const fmtSpread = (s) => (s > 0 ? "+" : "") + s.toFixed(1);
@@ -162,9 +174,9 @@ function scoreWeek(i) {
     const picks = wk.picks[name] || [];
     let pts = 0, live = 0, done = picks.length > 0, lines = [];
     for (const [team, spread] of picks) {
-      const r = data ? grade(team, spread, data.games[team]) : { cls: "pend", text: "loading…", pts: 0, live: 0, done: false };
+      const r = data ? grade(team, spread, data.games[team]) : { cls: "pend", word: "loading…", detail: "", pts: 0, live: 0, done: false };
       pts += r.pts; live += r.live; done = done && r.done;
-      lines.push(`<span class="${r.cls}">  ${team.padEnd(5)}${fmtSpread(spread).padStart(6)}   ${r.text}</span>`);
+      lines.push(`<span class="team ${r.cls}">${team}</span><span class="spread ${r.cls}">${fmtSpread(spread)}</span><span class="result ${r.cls}">${r.word.padEnd(9)} <span class="detail">${r.detail}</span></span>`);
     }
     if (wk.official && name in wk.official) { pts = wk.official[name]; done = true; live = 0; }
     out[name] = { pts, live, done, lines, entered: picks.length > 0 };
@@ -215,7 +227,7 @@ function renderBoard() {
         <span class="name">${r.name}</span>
         <span class="tally">${r.pts} pt${r.pts === 1 ? "" : "s"}${r.live ? ` <small>(+${r.live} live)</small>` : ""}</span>
       </div>
-      <pre>${r.lines.join("\n")}</pre>
+      <div class="picks">${r.lines.join("")}</div>
     </section>`).join("");
 }
 
