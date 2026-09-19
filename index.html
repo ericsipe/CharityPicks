@@ -88,6 +88,8 @@
               Use ESPN's abbreviation (LAR not LA, TA&M not TXAM, OU not OKLA,
               WSH not WAS, JAX not JAC, MIZ not MIZZ). A wrong one shows
               "no game found" on the page rather than failing silently.
+              If an abbreviation exists in both leagues (MIA = Dolphins and
+              Hurricanes), add a third item: ["MIA", -20.5, "cfb"] or "nfl".
    official: optional. If Splash's final weekly points differ from what the
              page computes, pin them here and they override, e.g.
              official: { "DKMEIS": 2 }
@@ -113,7 +115,24 @@ const WEEKS = [
     },
     official: {},
   },
-  // Week 2 goes here — copy the block above and change label/title/feeds/picks.
+  {
+    label: "Wk 2",
+    title: "NFL Week 2 / CFB Week 3 (Sep 17–21)",
+    feeds: [
+      "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=2&dates=2026",
+      "https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?groups=80&limit=400&dates=20260918",
+      "https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?groups=80&limit=400&dates=20260919",
+    ],
+    picks: {
+      "The Daddies":         [["SYR", 10.5], ["KSU", -20.5], ["USA", -5.5], ["UVA", -9.5], ["PHI", -6.5]],
+      "odds / TD33for99":    [["UGA", -25.5], ["KSU", -20.5], ["SMU", 2.5], ["WVU", 9.5], ["KC", -6.5]],
+      "odds / Purple Reign": [["MIA", -20.5, "cfb"], ["ASU", -5.5], ["TCU", -20.5], ["TEX", -30.5], ["UCLA", -14.5]],
+      "DKMEIS":              [["UNT", 2.5], ["MISS", 2.5], ["UCLA", -14.5], ["DAL", -3.5], ["KC", -6.5]],
+      "DKMEIS2":             [["CLEM", -3.5], ["ASU", -5.5], ["VAN", -3.5], ["FLA", -2.5], ["VT", -3.5]],
+    },
+    official: {},
+  },
+  // Week 3 goes here — copy the block above and change label/title/feeds/picks.
 ];
 /* ============================ end weekly edits ============================ */
 
@@ -126,8 +145,9 @@ async function fetchWeek(i) {
   const games = {};
   const results = await Promise.allSettled(WEEKS[i].feeds.map((u) => fetch(u, { cache: "no-store" }).then((r) => r.json())));
   let failed = 0;
-  for (const res of results) {
-    if (res.status !== "fulfilled") { failed++; continue; }
+  results.forEach((res, k) => {
+    if (res.status !== "fulfilled") { failed++; return; }
+    const league = WEEKS[i].feeds[k].includes("/nfl/") ? "nfl" : "cfb";
     for (const ev of res.value.events || []) {
       const c = ev.competitions[0];
       const away = c.competitors.find((x) => x.homeAway === "away");
@@ -138,8 +158,9 @@ async function fetchWeek(i) {
         state: ev.status.type.state, detail: ev.status.type.shortDetail, kickoff: new Date(ev.date),
       };
       games[g.away] = g; games[g.home] = g;
+      games[`${league}:${g.away}`] = g; games[`${league}:${g.home}`] = g;
     }
-  }
+  });
   return { games, failed, total: WEEKS[i].feeds.length };
 }
 
@@ -173,8 +194,9 @@ function scoreWeek(i) {
   for (const name of ENTRANTS) {
     const picks = wk.picks[name] || [];
     let pts = 0, live = 0, done = picks.length > 0, lines = [];
-    for (const [team, spread] of picks) {
-      const r = data ? grade(team, spread, data.games[team]) : { cls: "pend", word: "loading…", detail: "", pts: 0, live: 0, done: false };
+    for (const [team, spread, league] of picks) {
+      const g = data ? data.games[league ? `${league}:${team}` : team] : null;
+      const r = data ? grade(team, spread, g) : { cls: "pend", word: "loading…", detail: "", pts: 0, live: 0, done: false };
       pts += r.pts; live += r.live; done = done && r.done;
       lines.push(`<span class="team ${r.cls}">${team}</span><span class="spread ${r.cls}">${fmtSpread(spread)}</span><span class="result ${r.cls}">${r.word.padEnd(9)} <span class="detail">${r.detail}</span></span>`);
     }
