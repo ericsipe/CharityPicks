@@ -1,0 +1,27 @@
+{
+ "contest": "contest_01KZ49QZ2TCZS7ZVXTW175VHWZ",
+ "name": "2026 Pick 5 For Charity",
+ "weeks": [
+  {
+   "file": "data/wk1.json",
+   "slate": "slate_01KZ49QZ2PZAYNHG0VFB5CNDF1",
+   "label": "Wk 1",
+   "title": "NFL Week 1 / CFB Week 2",
+   "dates": "Sep 7-14"
+  },
+  {
+   "file": "data/wk2.json",
+   "slate": "slate_01KZ49QZ2QWZDRD91Q51V1XY71",
+   "label": "Wk 2",
+   "title": "NFL Week 2 / CFB Week 3",
+   "dates": "Sep 14-21"
+  },
+  {
+   "file": "data/wk3.json",
+   "slate": "slate_01KZ49QZ2QHB47JBGNNWRZ8S1X",
+   "label": "Wk 3",
+   "title": "NFL Week 3 / CFB Week 4",
+   "dates": "Sep 21-28"
+  }
+ ]
+}

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Pick 5 — everyone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #e9ecef; --ink: #17233a; --mute: #6b7486; --rule: #c9cfd8; --band: #f4f6f8;
+    --win: #1b7f4b; --loss: #b3261e; --live: #a85f00; --me: #fff4c2;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body { margin: 0; color: var(--ink); font: 400 14px/1.45 "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; padding: 24px 16px 60px; }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 15px; font-weight: 600; margin: 0; }
+  h2 { font-size: 14px; font-weight: 600; margin: 30px 0 8px; }
+  .meta { color: var(--mute); font-size: 13px; margin: 2px 0 0; }
+  .meta a { color: inherit; }
+  button, input { font: inherit; color: var(--ink); background: none; border: 1px solid var(--rule); border-radius: 3px; padding: 2px 8px; }
+  button { cursor: pointer; }
+  button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0; }
+  .bar input { min-width: 200px; }
+  .err { color: var(--loss); margin: 12px 0; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; white-space: nowrap; }
+  th { font-weight: 600; color: var(--mute); font-size: 12px; }
+  td.num, th.num { text-align: right; }
+  tr.me td { background: var(--me); }
+  tr.friend td.name::before { content: "★ "; color: var(--live); }
+  .sub { color: var(--mute); font-size: 12px; display: block; }
+  .win { color: var(--win); } .loss { color: var(--loss); } .live { color: var(--live); } .pend { color: var(--mute); }
+  .picks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .pick { white-space: nowrap; }
+  .pick b { font-weight: 600; }
+  .pick .d { color: var(--mute); }
+  .wrap { overflow-x: auto; }
+  .note { color: var(--mute); font-size: 12px; margin-top: 28px; }
+  details summary { cursor: pointer; color: var(--mute); font-size: 13px; }
+  .pop { columns: 3; column-gap: 24px; margin: 6px 0 0; padding: 0; list-style: none; font-size: 13px; }
+  @media (max-width: 700px) { body { padding: 16px 10px 48px; font-size: 13px; } .pop { columns: 2; } th, td { padding: 4px 5px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>2026 Pick 5 For Charity — everyone</h1>
+  <div class="meta"><span id="updated">Loading…</span> · <a href="index.html">friends board</a></div>
+  <div id="error" class="err" hidden></div>
+
+  <h2>Season</h2>
+  <div class="bar">
+    <input id="q" type="search" placeholder="find an entrant" aria-label="find an entrant">
+    <button id="friendsOnly" type="button" aria-pressed="false">friends only</button>
+    <span class="meta" id="count"></span>
+  </div>
+  <div class="wrap"><table id="season"><thead></thead><tbody></tbody></table></div>
+
+  <h2 id="weekTitle">Week</h2>
+  <div class="bar" id="weekTabs"></div>
+  <details><summary>most-picked teams this week</summary><ul class="pop" id="pop"></ul></details>
+  <div class="wrap"><table id="board"><thead><tr><th>#</th><th>entrant</th><th class="num">pts</th><th>picks</th></tr></thead><tbody></tbody></table></div>
+
+  <p class="note" id="note"></p>
+</main>
+
+<script>
+/* ---------------------------------------------------------------
+   Data comes from data/index.json + data/wkN.json, written by the
+   collector (collect.js) from Splash's own API — grades are Splash's
+   official ones. Nothing here is typed by hand.
+
+   FRIENDS: Splash entry -> label on the friends board. Match on the
+   entry's display name first, then the handle. Entries not in this
+   contest (e.g. someone tracked from another pool) simply won't match.
+   --------------------------------------------------------------- */
+const ME = "TheDaddies";
+const FRIENDS = {
+  "The Daddies": "The Daddies",
+  "TD33for99": "odds / TD33for99",
+  "Purple Reign": "odds / Purple Reign",
+  "D-PIGGY$": "D-PIGGY$",   // not found in the Splash entry list yet — set the real entry name here
+  "Susan": "Susan",         // same
+};
+
+const $ = (id) => document.getElementById(id);
+let WEEKS = [], selected = 0, friendsOnly = false, query = "";
+
+const friendLabel = (e) => FRIENDS[e.name] || FRIENDS[e.handle] || null;
+const entrantKey = (e) => e.id;
+const displayName = (e) => e.name && e.name !== e.handle ? `${e.name}<span class="sub">${e.handle}</span>` : e.handle;
+
+function gradePick(pick, games) {
+  const [gid, team, spread, grade] = pick;
+  const g = games[gid];
+  const sp = (spread > 0 ? "+" : "") + Number(spread).toFixed(1);
+  if (!g) return { cls: "pend", team, sp, word: "?", detail: "game not in feed" };
+  const isAway = g.away === team, opp = isAway ? g.home : g.away;
+  const me = isAway ? g.as : g.hs, them = isAway ? g.hs : g.as;
+  const score = (me == null || them == null) ? "" : (isAway ? `${team} ${me}–${them} @${opp}` : `@${opp} ${them}–${me} ${team}`);
+  const clock = g.q ? ` Q${g.q} ${g.clock || ""}`.trimEnd() : "";
+  if (grade === "won")  return { cls: "win",  team, sp, word: "✓", detail: score };
+  if (grade === "lost") return { cls: "loss", team, sp, word: "✗", detail: score };
+  if (grade === "winning") return { cls: "live", team, sp, word: "▲", detail: score + clock };
+  if (grade === "losing")  return { cls: "live", team, sp, word: "▼", detail: score + clock };
+  if (g.status === "scheduled") {
+    const t = new Date(g.start).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" });
+    return { cls: "pend", team, sp, word: "·", detail: `vs ${opp} ${t}` };
+  }
+  return { cls: "pend", team, sp, word: "–", detail: score ? score + " (push/ungraded)" : `vs ${opp}` };
+}
+
+function weekStats(w) {
+  // per entrant: official pts, live count, done flag
+  const out = {};
+  for (const e of w.entries) {
+    let live = 0, done = true;
+    for (const p of e.picks) {
+      if (p[3] === "winning") live++;
+      if (p[3] !== "won" && p[3] !== "lost") done = false;
+    }
+    if (e.picks.length === 0) done = true;
+    out[entrantKey(e)] = { e, pts: e.pts || 0, live, done, entered: e.picks.length > 0 };
+  }
+  return out;
+}
+
+function renderSeason() {
+  const stats = WEEKS.map(weekStats);
+  const all = new Map();
+  WEEKS.forEach((w, i) => { for (const e of w.entries) if (!all.has(entrantKey(e))) all.set(entrantKey(e), e); });
+  let rows = [...all.values()].map((e) => {
+    const per = stats.map((s) => s[entrantKey(e)] || { pts: 0, live: 0, done: true, entered: false });
+    return { e, per, total: per.reduce((a, r) => a + r.pts, 0), live: per.reduce((a, r) => a + r.live, 0) };
+  });
+  rows.sort((a, b) => b.total - a.total || b.live - a.live || a.e.handle.localeCompare(b.e.handle));
+  let rank = 0, prev = null;
+  rows.forEach((r, i) => { if (r.total !== prev) { rank = i + 1; prev = r.total; } r.rank = rank; });
+  const q = query.trim().toLowerCase();
+  const shown = rows.filter((r) => (!friendsOnly || friendLabel(r.e)) && (!q || `${r.e.handle} ${r.e.name || ""}`.toLowerCase().includes(q)));
+  $("count").textContent = `${shown.length} of ${rows.length} entries`;
+  const ties = (r, rows) => rows.filter((x) => x.total === r.total).length > 1 ? "T" : "";
+  $("season").querySelector("thead").innerHTML = `<tr><th>#</th><th>entrant</th>${WEEKS.map((w, i) => `<th class="num"><button type="button" data-i="${i}" aria-pressed="${i === selected}">${w.label}</button></th>`).join("")}<th class="num">total</th></tr>`;
+  $("season").querySelector("tbody").innerHTML = shown.map((r) => `
+    <tr class="${r.e.handle === ME ? "me" : ""} ${friendLabel(r.e) ? "friend" : ""}">
+      <td>${ties(r, rows)}${r.rank}</td>
+      <td class="name">${displayName(r.e)}</td>
+      ${r.per.map((p) => `<td class="num">${p.entered ? p.pts + (p.done ? "" : "*") : "–"}</td>`).join("")}
+      <td class="num"><b>${r.total}</b>${r.live ? ` <span class="live">+${r.live}</span>` : ""}</td>
+    </tr>`).join("");
+  $("season").querySelectorAll("thead button").forEach((b) => b.addEventListener("click", () => { selected = +b.dataset.i; renderAll(); }));
+}
+
+function renderTabs() {
+  $("weekTabs").innerHTML = WEEKS.map((w, i) => `<button type="button" data-i="${i}" aria-pressed="${i === selected}">${w.label}</button>`).join("") +
+    `<span class="meta">${WEEKS[selected].dates || ""} · picks locked ${new Date(WEEKS[selected].lockedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", timeZone: "America/Chicago" })} CT</span>`;
+  $("weekTabs").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => { selected = +b.dataset.i; renderAll(); }));
+}
+
+function renderBoard() {
+  const w = WEEKS[selected];
+  $("weekTitle").textContent = w.title || w.label;
+  const stats = weekStats(w);
+  const q = query.trim().toLowerCase();
+  let rows = w.entries.filter((e) => e.picks.length).map((e) => ({ e, ...stats[entrantKey(e)] }));
+  rows.sort((a, b) => (b.pts + b.live) - (a.pts + a.live) || b.pts - a.pts || a.e.handle.localeCompare(b.e.handle));
+  let rank = 0, prev = null;
+  rows.forEach((r, i) => { const k = r.pts + r.live; if (k !== prev) { rank = i + 1; prev = k; } r.rank = rank; });
+  rows = rows.filter((r) => (!friendsOnly || friendLabel(r.e)) && (!q || `${r.e.handle} ${r.e.name || ""}`.toLowerCase().includes(q)));
+  $("board").querySelector("tbody").innerHTML = rows.map((r) => `
+    <tr class="${r.e.handle === ME ? "me" : ""} ${friendLabel(r.e) ? "friend" : ""}">
+      <td>${r.rank}</td>
+      <td class="name">${displayName(r.e)}</td>
+      <td class="num">${r.pts}${r.live ? ` <span class="live">+${r.live}</span>` : ""}${r.done ? "" : "*"}</td>
+      <td><div class="picks">${r.e.picks.map((p) => { const g = gradePick(p, w.games); return `<span class="pick ${g.cls}"><b>${g.team}</b> ${g.sp} ${g.word} <span class="d">${g.detail}</span></span>`; }).join("")}</div></td>
+    </tr>`).join("");
+  // most-picked teams
+  const pop = {};
+  for (const e of w.entries) for (const p of e.picks) { const k = `${p[1]} ${(p[2] > 0 ? "+" : "") + Number(p[2]).toFixed(1)}`; pop[k] = pop[k] || { n: 0, grade: p[3], gid: p[0] }; pop[k].n++; }
+  const list = Object.entries(pop).sort((a, b) => b[1].n - a[1].n).slice(0, 24);
+  $("pop").innerHTML = list.map(([k, v]) => { const g = gradePick([v.gid, k.split(" ")[0], +k.split(" ")[1], v.grade], w.games); return `<li class="${g.cls}">${v.n} × ${k} ${g.word}</li>`; }).join("");
+}
+
+function renderAll() { renderSeason(); renderTabs(); renderBoard(); }
+
+async function load() {
+  try {
+    const idx = await (await fetch("data/index.json", { cache: "no-store" })).json();
+    const weeks = await Promise.all(idx.weeks.map((w) => fetch(w.file, { cache: "no-store" }).then((r) => r.json())));
+    WEEKS = weeks;
+    selected = WEEKS.length - 1;
+    const latest = WEEKS[selected];
+    $("updated").textContent = `${idx.name} · ${latest.entries.length} entries · data collected ${new Date(latest.collectedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" })} CT`;
+    $("note").textContent = "Points and ✓/✗ are Splash's official grades, pulled by the collector at the time shown above; ▲/▼ are Splash's live leaders at that moment. * = week still in progress. Highlighted row = The Daddies; ★ = friends board.";
+    renderAll();
+  } catch (e) {
+    $("error").hidden = false; $("error").textContent = "Could not load the data files: " + e.message;
+  }
+}
+
+$("q").addEventListener("input", (ev) => { query = ev.target.value; renderAll(); });
+$("friendsOnly").addEventListener("click", (ev) => { friendsOnly = !friendsOnly; ev.currentTarget.setAttribute("aria-pressed", String(friendsOnly)); renderAll(); });
+load();
+</script>
+</body>
+</html>
