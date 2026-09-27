@@ -10,7 +10,7 @@
 <style>
   :root {
     --paper: #e9ecef; --ink: #17233a; --mute: #6b7486; --rule: #c9cfd8; --band: #f4f6f8;
-    --win: #1b7f4b; --loss: #b3261e; --live: #a85f00; --me: #fff4c2;
+    --win: #1b7f4b; --loss: #b3261e; --live: #a85f00; --me: #fff4c2; --friend: #e3ecf9;
   }
   * { box-sizing: border-box; }
   html { background: var(--paper); }
@@ -31,8 +31,10 @@
   th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; white-space: nowrap; }
   th { font-weight: 600; color: var(--mute); font-size: 12px; }
   td.num, th.num { text-align: right; }
-  tr.me td { background: var(--me); }
+  tr.friend td { background: var(--friend); }
+  tr.friend td.name { font-weight: 600; }
   tr.friend td.name::before { content: "★ "; color: var(--live); }
+  tr.me td { background: var(--me); }
   .sub { color: var(--mute); font-size: 12px; display: block; }
   .win { color: var(--win); } .loss { color: var(--loss); } .live { color: var(--live); } .pend { color: var(--mute); }
   .picks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
