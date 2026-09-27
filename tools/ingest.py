@@ -25,11 +25,21 @@ def main() -> int:
             continue
         file = f"data/{key}.json"
         path = REPO / file
-        # Never overwrite a week that has picks with an empty collection (Splash hiccup).
-        if path.exists() and not week["entries"]:
+        if path.exists():
             old = json.loads(path.read_text(encoding="utf-8"))
-            if old.get("entries"):
+            # A week's slate id never changes: a different one means the collector grabbed the wrong week.
+            if old.get("slate") and old["slate"] != week["slate"]:
+                print(f"{key}: REFUSED, incoming slate {week['slate']} differs from stored {old['slate']}")
+                continue
+            # Never overwrite a week that has picks with an empty collection (Splash hiccup).
+            if old.get("entries") and not week["entries"]:
                 print(f"{key}: incoming has 0 entries, keeping the stored {len(old['entries'])}")
+                continue
+        else:
+            # A new week must lock later than every stored week.
+            later = [json.loads((REPO / w["file"]).read_text(encoding="utf-8")).get("lockedAt", "") for w in index["weeks"] if (REPO / w["file"]).exists()]
+            if later and week.get("lockedAt", "") <= max(later):
+                print(f"{key}: REFUSED, lock {week.get('lockedAt')} is not after the stored weeks")
                 continue
         path.write_text(json.dumps(week, separators=(",", ":")), encoding="utf-8")
         by_file[file] = {"file": file, "slate": week["slate"], "label": week.get("label", key),

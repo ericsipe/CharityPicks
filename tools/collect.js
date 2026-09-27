@@ -2,8 +2,8 @@
 
    HOW IT IS USED (by the scheduled task, or by hand in a Claude session)
    1. Start the receiver on this PC:  python tools/receiver.py data/incoming.json
-   2. In the app's built-in browser (signed in to Splash), open any page of the contest
-      that shows the week selector, e.g.
+   2. In the app's built-in browser (signed in to Splash), open the contest's
+      "Picks by Week" view (any week), e.g.
       https://contests.app.splashsports.com/team-pickem/contests/contest_01KZ49QZ2TCZS7ZVXTW175VHWZ/standings/picks/slate_01KZ49QZ2QHB47JBGNNWRZ8S1X
    3. Paste this whole file into the tab with the javascript tool, followed by:
         await runCollector()
@@ -11,13 +11,14 @@
       week after it, gzips the result, and NAVIGATES to the local receiver page with the
       data in the URL fragment. The receiver saves data/incoming.json and exits.
    4. Run  python tools/ingest.py  to merge incoming.json into data/, commit and push.
-   5. Navigate the tab back to Splash (optional; the login stays either way).
 
    WHY THIS SHAPE
    Splash's data service answers only with the bearer token the web app holds. The
    token stays inside the tab: the script borrows it from the app's own requests and
    never returns it. Splash's Content-Security-Policy blocks fetch() to localhost, so
    the result travels by a plain navigation instead, which CSP cannot stop.
+   Each week button carries its slate id in data-testid="standings-period-<slate>",
+   so no week needs to be clicked to find its id.
 
    WHAT EACH WEEK LOOKS LIKE
    { slate, label, title, dates, lockedAt, collectedAt,
@@ -31,6 +32,11 @@ const RECEIVER = "http://127.0.0.1:8765/collector.html";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+function weekButtons() {
+  return [...document.querySelectorAll('button[data-testid^="standings-period-slate_"]')];
+}
+const slateOf = (b) => b.dataset.testid.replace("standings-period-", "");
+
 async function splashToken() {
   if (window.__splashTok) return window.__splashTok;
   const orig = XMLHttpRequest.prototype.setRequestHeader;
@@ -38,19 +44,16 @@ async function splashToken() {
     if (/^authorization$/i.test(k)) window.__splashTok = v;
     return orig.apply(this, arguments);
   };
-  // Nudge the app into making a request so the header shows up.
-  const btn = weekButtons()[0];
+  // Nudge the app into making a request so the header shows up: re-click the week
+  // that is already selected, which reloads its data without changing the view.
+  const btn = weekButtons().find((b) => b.getAttribute("aria-current") === "true") || weekButtons()[0];
   if (btn) btn.click();
   for (let i = 0; i < 60 && !window.__splashTok; i++) await sleep(250);
   if (!window.__splashTok) throw new Error("Could not capture Splash's token; reload the page and run again.");
   return window.__splashTok;
 }
 
-function weekButtons() {
-  return [...document.querySelectorAll("button")].filter((b) => /NFL Week \d+/.test(b.textContent));
-}
-
-// "Sep 28-Oct 5" or "Dec 28-Jan 4" -> [start, end] as local dates
+// "Sep 28-Oct 5" or "Dec 28-Jan 4" -> [start, end) as local dates
 const MON = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
 function dateRange(text, today) {
   const m = text.match(/([A-Z][a-z]{2}) (\d+)\s*-\s*(?:([A-Z][a-z]{2}) )?(\d+)/);
@@ -67,19 +70,6 @@ function describeButton(b, index) {
   const text = b.textContent.trim().replace(/\s+/g, " ").replace(/live$/i, "").trim();
   const m = text.match(/^(NFL Week \d+) \| (.+?)([A-Z][a-z]{2} \d+.*)$/);
   return { label: `Wk ${index + 1}`, title: m ? `${m[1]} / ${m[2].trim()}` : text, dates: m ? m[3] : "" };
-}
-
-// Click a week button and return the slate id the URL changes to.
-async function slateFor(button) {
-  const before = location.href;
-  const already = (before.match(/slate_[0-9A-Z]{26}/) || [null])[0];
-  if (button.getAttribute("aria-pressed") === "true" && already) return already;
-  button.click();
-  for (let i = 0; i < 60 && location.href === before; i++) await sleep(250);
-  await sleep(600);
-  const id = (location.href.match(/slate_[0-9A-Z]{26}/) || [null])[0];
-  if (!id) throw new Error("Week button did not change the URL; is this the Picks by Week view?");
-  return id;
 }
 
 async function collectSlate(slate, meta) {
@@ -104,7 +94,13 @@ async function collectSlate(slate, meta) {
   }));
   const used = new Set(entries.flatMap((e) => e.picks.map((p) => p[0])));
   for (const id of Object.keys(games)) if (!used.has(id)) delete games[id];
-  return { slate, ...meta, lockedAt: ps.data.slateFullyLockedAt, collectedAt: new Date().toISOString(), games, entries };
+  const week = { slate, ...meta, lockedAt: ps.data.slateFullyLockedAt, collectedAt: new Date().toISOString(), games, entries };
+  // Sanity check: the slate's lock date must fall inside the week button's date range.
+  const today = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+  const r = dateRange(meta.dates || "", today);
+  const lock = new Date(new Date(week.lockedAt).toLocaleString("en-US", { timeZone: "America/Chicago" }));
+  if (r && !(lock >= r[0] && lock < r[1])) throw new Error(`${meta.title}: slate ${slate} locks ${week.lockedAt}, outside ${meta.dates}`);
+  return week;
 }
 
 // Which weeks to collect: the one whose date range contains today, and the next one.
@@ -112,6 +108,7 @@ function targetWeeks() {
   const today = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   today.setHours(12, 0, 0, 0);
   const btns = weekButtons();
+  if (!btns.length) throw new Error("No week buttons on this page; open the Picks by Week view.");
   let idx = btns.findIndex((b) => { const r = dateRange(b.textContent, today); return r && today >= r[0] && today < r[1]; });
   if (idx < 0) idx = btns.findIndex((b) => b.textContent.trim().endsWith("live"));
   if (idx < 0) throw new Error("No week button matches today's date.");
@@ -130,13 +127,12 @@ async function handOff(obj) {
 
 // The one call the task makes. Returns a short summary; the data goes to the receiver.
 async function runCollector() {
+  await splashToken();
   const out = {};
   for (const { index, button } of targetWeeks()) {
-    const slate = await slateFor(button);
-    const meta = describeButton(button, index);
-    out[`wk${index + 1}`] = await collectSlate(slate, meta);
+    out[`wk${index + 1}`] = await collectSlate(slateOf(button), describeButton(button, index));
   }
-  const summary = Object.entries(out).map(([k, w]) => `${k} ${w.slate} ${w.entries.length} entries`).join("; ");
+  const summary = Object.entries(out).map(([k, w]) => `${k} ${w.slate} ${w.entries.length} entries, locks ${w.lockedAt.slice(0, 10)}`).join("; ");
   const size = await handOff(out);
   return `${summary}; ${size} bytes handed to the receiver`;
 }
