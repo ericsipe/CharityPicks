@@ -1,0 +1,94 @@
+/* Shared look for the Pick 5 pages (index.html = friends board, everyone.html = whole pool). */
+:root {
+  --bg: #f4f5f8; --card: #ffffff; --ink: #1c2333; --mute: #6b7280; --rule: #e5e7eb; --band: #f9fafb;
+  --accent: #1f3a5f; --accent-ink: #ffffff;
+  --win: #15803d; --win-bg: #dcfce7; --loss: #b91c1c; --loss-bg: #fee2e2; --live: #b45309; --live-bg: #fef3c7; --pend: #6b7280; --pend-bg: #f3f4f6;
+  --me: #f59e0b;        /* The Daddies */
+  --f1: #2563eb;        /* TD33for99 */
+  --f2: #7c3aed;        /* Purple Reign */
+  --f3: #db2777;        /* D-PIGGY$ */
+  --f4: #0d9488;        /* Susan */
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; color: var(--ink); font: 400 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+main { max-width: 1120px; margin: 0 auto; padding: 16px 16px 64px; }
+a { color: var(--accent); }
+
+/* top bar with the two page tabs */
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 10px 0 14px; }
+.top h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+.top .sub { color: var(--mute); font-size: 13px; margin-top: 2px; }
+.tabs { display: inline-flex; background: #e5e7eb; border-radius: 999px; padding: 4px; gap: 4px; }
+.tabs a { text-decoration: none; color: var(--ink); font-weight: 600; font-size: 14px; padding: 8px 18px; border-radius: 999px; }
+.tabs a[aria-current="page"] { background: var(--accent); color: var(--accent-ink); box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+.tabs a:hover:not([aria-current="page"]) { background: #d1d5db; }
+
+/* cards */
+.card { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 16px; margin: 14px 0; box-shadow: 0 1px 2px rgba(16,24,40,.04); }
+.card h2 { font-size: 16px; font-weight: 700; margin: 0 0 10px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 12px; }
+.meta { color: var(--mute); font-size: 13px; }
+.err { color: var(--loss); margin: 12px 0; }
+button, input[type="search"] { font: inherit; color: var(--ink); background: #fff; border: 1px solid #d1d5db; border-radius: 8px; padding: 6px 12px; }
+button { cursor: pointer; font-weight: 500; }
+button:hover { background: var(--band); }
+button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:focus-visible, input:focus-visible, .tabs a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type="search"] { min-width: 220px; }
+
+/* tables */
+.wrap { overflow-x: auto; }
+table { border-collapse: separate; border-spacing: 0; width: 100%; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; white-space: nowrap; }
+thead th { position: sticky; top: 0; background: var(--card); font-size: 12px; font-weight: 600; color: var(--mute); text-transform: uppercase; letter-spacing: .04em; z-index: 1; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:hover td { background: var(--band); }
+td .sub { display: block; color: var(--mute); font-size: 12px; font-weight: 400; }
+td.total { font-weight: 700; }
+
+/* friends: colored left edge + tag with the friend's name */
+tr[data-f] td:first-child { border-left: 5px solid var(--fc); padding-left: 8px; }
+tr[data-f] td { background: color-mix(in srgb, var(--fc) 8%, #fff); }
+tr[data-f]:hover td { background: color-mix(in srgb, var(--fc) 14%, #fff); }
+.tag { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; background: var(--fc); border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: 1px; }
+[data-f="me"] { --fc: var(--me); } [data-f="f1"] { --fc: var(--f1); } [data-f="f2"] { --fc: var(--f2); } [data-f="f3"] { --fc: var(--f3); } [data-f="f4"] { --fc: var(--f4); }
+
+/* pick chips */
+.picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.pick { display: inline-flex; align-items: baseline; gap: 6px; border-radius: 8px; padding: 3px 8px; font-size: 13px; background: var(--pend-bg); color: var(--pend); white-space: nowrap; }
+.pick b { font-weight: 700; color: var(--ink); }
+.pick .d { font-size: 12px; opacity: .85; }
+.pick.win { background: var(--win-bg); color: var(--win); } .pick.loss { background: var(--loss-bg); color: var(--loss); } .pick.live { background: var(--live-bg); color: var(--live); }
+.win { color: var(--win); } .loss { color: var(--loss); } .live { color: var(--live); } .pend { color: var(--pend); }
+
+/* week tabs, popular list, footnote */
+.weeks { display: flex; flex-wrap: wrap; gap: 6px; }
+details summary { cursor: pointer; color: var(--accent); font-size: 14px; font-weight: 500; }
+.pop { columns: 3; column-gap: 24px; margin: 8px 0 0; padding: 0; list-style: none; font-size: 14px; }
+.pop li { break-inside: avoid; padding: 2px 0; }
+.note { color: var(--mute); font-size: 13px; margin-top: 20px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--mute); }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--fc); margin-right: 6px; vertical-align: -1px; }
+
+/* friends board (index.html) */
+.entry { border-top: 1px solid var(--rule); padding: 12px 0; }
+.entry:first-child { border-top: 0; }
+.entry .head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.entry .name { font-weight: 700; }
+.entry .tally { font-weight: 700; font-variant-numeric: tabular-nums; }
+.entry .tally small { color: var(--mute); font-weight: 400; }
+.entry[data-f] { border-left: 5px solid var(--fc); padding-left: 10px; }
+.entry[data-f] .name::after { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--fc); margin-left: 8px; vertical-align: -1px; }
+pre.season { margin: 0; font: 13px/1.6 ui-monospace, Menlo, Consolas, monospace; overflow-x: auto; }
+
+@media (max-width: 720px) {
+  main { padding: 10px 10px 48px; }
+  .top h1 { font-size: 18px; }
+  .tabs a { padding: 7px 14px; }
+  th, td { padding: 6px 7px; }
+  .pop { columns: 2; }
+  .picks { gap: 4px; }
+  .pick .d { display: none; }
+  input[type="search"] { min-width: 150px; flex: 1; }
+}

@@ -4,72 +4,44 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Pick 5 board</title>
+<title>Pick 5 — friends</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 <style>
-  :root {
-    --paper: #e9ecef; --ink: #17233a; --mute: #6b7486; --rule: #c9cfd8;
-    --win: #1b7f4b; --loss: #b3261e; --live: #a85f00;
-  }
-  * { box-sizing: border-box; }
-  html { background: var(--paper); }
-  body {
-    margin: 0; color: var(--ink);
-    font: 400 15px/1.5 "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
-    padding: 28px 16px 60px;
-  }
-  main { max-width: 680px; margin: 0 auto; }
-  h1 { font-size: 15px; font-weight: 600; margin: 0; }
-  h2 { font-size: 15px; font-weight: 600; margin: 34px 0 6px; }
-  .meta { color: var(--mute); margin: 2px 0 0; font-size: 13px; }
-  button {
-    font: inherit; color: var(--ink); background: none;
-    border: 1px solid var(--rule); border-radius: 3px; padding: 1px 8px; cursor: pointer;
-  }
-  button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-  button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-  .meta button { margin-left: 8px; }
-  pre { margin: 8px 0 0; font: inherit; white-space: pre; overflow-x: auto; }
-  .picks { margin: 8px 0 0; display: grid; grid-template-columns: max-content max-content 1fr; column-gap: 14px; row-gap: 2px; }
-  .picks .team { white-space: nowrap; }
-  .picks .spread { text-align: right; white-space: nowrap; }
+  /* page-specific bits for the friends board */
+  .picks { display: grid; grid-template-columns: max-content max-content 1fr; column-gap: 12px; row-gap: 3px; font-size: 14px; }
+  .picks .team { font-weight: 600; white-space: nowrap; }
+  .picks .spread { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .picks .result { white-space: nowrap; }
   .picks .result .detail { color: var(--mute); }
-  @media (max-width: 600px) {
-    body { padding: 20px 12px 48px; font-size: 14px; }
-    #season { font-size: 12px; }
-    .picks { grid-template-columns: max-content max-content 1fr; row-gap: 8px; }
-    .picks .result { white-space: normal; }
-    .picks .result .detail { display: block; }
-  }
-  .weeks { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
-  .entry { border-top: 1px solid var(--rule); padding: 14px 0 12px; }
-  .entry:last-child { border-bottom: 1px solid var(--rule); }
-  .head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-  .name { font-weight: 600; }
-  .tally { white-space: nowrap; }
-  .tally small { color: var(--mute); }
-  .win  { color: var(--win); }
-  .loss { color: var(--loss); }
-  .live { color: var(--live); }
-  .pend { color: var(--mute); }
-  .err { color: var(--loss); margin: 12px 0; }
-  .note { color: var(--mute); font-size: 13px; margin-top: 28px; }
+  @media (max-width: 720px) { .picks .result { white-space: normal; } .picks .result .detail { display: block; } }
 </style>
 </head>
 <body>
 <main>
-  <h1>2026 Pick 5 For Charity</h1>
-  <div class="meta"><span id="updated">Loading scores…</span><button id="refresh" type="button">Refresh</button></div>
+  <header class="top">
+    <div>
+      <h1>2026 Pick 5 For Charity</h1>
+      <div class="sub"><span id="updated">Loading scores…</span> · <button id="refresh" type="button">Refresh</button></div>
+    </div>
+    <nav class="tabs" aria-label="pages">
+      <a href="index.html" aria-current="page">Friends</a>
+      <a href="everyone.html">Everyone</a>
+    </nav>
+  </header>
   <div id="error" class="err" hidden></div>
 
-  <h2>Season</h2>
-  <pre id="season"></pre>
+  <section class="card">
+    <h2>Season</h2>
+    <pre id="season" class="season"></pre>
+  </section>
 
+  <section class="card">
   <h2 id="weekTitle">Week</h2>
   <div class="weeks" id="weekTabs"></div>
   <div id="board"></div>
+  </section>
 
   <p class="note">Correct = 1 pt; a push scores 0. Graded against the line shown at pick time. Scores from ESPN. The newest week refreshes every 60 s while open; earlier weeks load once. Splash's official grading wins if they differ — an official total can be pinned per week in the file.</p>
 </main>
@@ -96,6 +68,7 @@
    ENTRANTS sets the display order and the names used as keys.
    ============================================================ */
 const ENTRANTS = ["The Daddies", "odds / TD33for99", "odds / Purple Reign", "D-PIGGY$", "Susan"];
+const COLOR_KEY = { "The Daddies": "me", "odds / TD33for99": "f1", "odds / Purple Reign": "f2", "D-PIGGY$": "f3", "Susan": "f4" };
 
 const WEEKS = [
   {
@@ -263,7 +236,7 @@ function renderBoard() {
   const rows = ENTRANTS.filter((n) => res[n].entered).map((n) => ({ name: n, ...res[n] }))
     .sort((a, b) => (b.pts + b.live) - (a.pts + a.live) || b.pts - a.pts);
   $("board").innerHTML = rows.map((r) => `
-    <section class="entry">
+    <section class="entry" data-f="${COLOR_KEY[r.name] || ""}">
       <div class="head">
         <span class="name">${r.name}</span>
         <span class="tally">${r.pts} pt${r.pts === 1 ? "" : "s"}${r.live ? ` <small>(+${r.live} live)</small>` : ""}</span>
