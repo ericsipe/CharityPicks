@@ -8,7 +8,7 @@
    The bearer token the site uses stays inside the page; nothing is copied out.
 
    WHAT IT RETURNS
-   { slate, lockedAt, collectedAt, games: {gameId: {...}}, entries: [{rank, handle,
+   { slate, lockedAt, collectedAt, games: {gameId: {lg, start, status, away, home, awayName, homeName, as, hs, hsp, q, clock}}, entries: [{rank, handle,
      name, id, pts, picks: [[gameId, teamAlias, spread, grade], ...]}, ...] }
    grade is Splash's own: "won" | "lost" | "winning" | "losing" | null (not started).
    Splash returns every entrant's picks as soon as the slate locks, even for
@@ -51,6 +51,7 @@ async function collectSplashWeek(SLATE) {
   const games = {};
   for (const g of ps.data.games) {
     games[g.gameId] = { lg: g.league, start: g.startsAt, status: g.status, away: g.away.alias, home: g.home.alias,
+      awayName: g.away.name, homeName: g.home.name,
       as: g.away.score, hs: g.home.score, hsp: g.home.spread, q: g.state?.quarter ?? null, clock: g.state?.clock ?? null };
   }
   const entries = lb.data.map((e) => ({
@@ -61,4 +62,17 @@ async function collectSplashWeek(SLATE) {
   for (const id of Object.keys(games)) if (!used.has(id)) delete games[id];
   return { slate, lockedAt: ps.data.slateFullyLockedAt, collectedAt: new Date().toISOString(), games, entries };
 }
-// Example (in the tab): JSON.stringify(await collectSplashWeek())
+// Hand the result to this PC without going through the chat: gzip + base64 it and
+// navigate the tab to the local receiver page (tools/receiver.py, port 8765) with the
+// data in the URL fragment. Splash's Content-Security-Policy blocks fetch() to
+// localhost, but it cannot block a plain navigation. The receiver saves the file
+// and exits; the tab can then be navigated back to Splash.
+async function handOff(obj) {
+  const raw = JSON.stringify(obj);
+  const cs = new CompressionStream("gzip"); const w = cs.writable.getWriter(); w.write(new TextEncoder().encode(raw)); w.close();
+  const bytes = new Uint8Array(await new Response(cs.readable).arrayBuffer());
+  let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  location.href = "http://127.0.0.1:8765/collector.html#" + btoa(bin);
+  return raw.length;
+}
+// Example (in the tab): await handOff({ wk4: await collectSplashWeek("slate_...") })
