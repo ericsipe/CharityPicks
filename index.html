@@ -34,7 +34,8 @@
 
   <section class="card">
     <h2>Season</h2>
-    <pre id="season" class="season"></pre>
+    <div class="wrap"><table id="season"><thead></thead><tbody></tbody></table></div>
+    <div class="meta" id="seasonNote" style="margin-top:8px"></div>
   </section>
 
   <section class="card">
@@ -206,19 +207,19 @@ function renderSeason() {
     const live = per.reduce((s, r) => s + r.live, 0);
     return { name, per, total, live };
   }).sort((a, b) => b.total - a.total || b.live - a.live);
-
-  const nameW = Math.max(...ENTRANTS.map((n) => n.length));
-  const head = " ".repeat(nameW) + "  " + WEEKS.map((w) => w.label.padStart(5)).join("") + "   Total";
-  const body = rows.map((r) => {
-    const cells = r.per.map((p) => {
-      if (!p.entered) return "–".padStart(5);
-      const v = String(p.pts) + (p.done ? "" : "*");
-      return v.padStart(5);
-    }).join("");
-    const liveNote = r.live ? `  <span class="live">(+${r.live} live)</span>` : "";
-    return `${r.name.padEnd(nameW)}  ${cells}   ${String(r.total).padStart(5)}${liveNote}`;
-  }).join("\n");
-  $("season").innerHTML = head + "\n" + body + (WEEKS.some((_, i) => Object.values(weekly[i]).some((p) => !p.done)) ? "\n\n* week still in progress" : "");
+  let rank = 0, prev = null;
+  rows.forEach((r, i) => { if (r.total !== prev) { rank = i + 1; prev = r.total; } r.rank = rank; });
+  const tie = (r) => rows.filter((x) => x.total === r.total).length > 1 ? "T" : "";
+  $("season").querySelector("thead").innerHTML = `<tr><th>#</th><th>Entrant</th>${WEEKS.map((w) => `<th class="num">${w.label}</th>`).join("")}<th class="num">Total</th></tr>`;
+  $("season").querySelector("tbody").innerHTML = rows.map((r) => `
+    <tr data-f="${COLOR_KEY[r.name] || ""}">
+      <td>${tie(r)}${r.rank}</td>
+      <td>${r.name}</td>
+      ${r.per.map((p) => `<td class="num">${p.entered ? p.pts + (p.done ? "" : "*") : "–"}</td>`).join("")}
+      <td class="num total">${r.total}${r.live ? ` <span class="live">+${r.live}</span>` : ""}</td>
+    </tr>`).join("");
+  const inProgress = WEEKS.some((_, i) => Object.values(weekly[i]).some((p) => !p.done));
+  $("seasonNote").textContent = inProgress ? "* week still in progress" : "";
 }
 
 function renderTabs() {

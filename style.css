@@ -68,8 +68,12 @@ details summary { cursor: pointer; color: var(--accent); font-size: 14px; font-w
 .pop { columns: 3; column-gap: 24px; margin: 8px 0 0; padding: 0; list-style: none; font-size: 14px; }
 .pop li { break-inside: avoid; padding: 2px 0; }
 .note { color: var(--mute); font-size: 13px; margin-top: 20px; }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--mute); }
-.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--fc); margin-right: 6px; vertical-align: -1px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 8px; font-size: 13px; margin-bottom: 10px; }
+.legend .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid color-mix(in srgb, var(--fc) 40%, #fff); background: color-mix(in srgb, var(--fc) 10%, #fff); color: var(--ink); border-radius: 999px; padding: 3px 10px; font-size: 13px; }
+.legend .chip:hover { background: color-mix(in srgb, var(--fc) 22%, #fff); }
+.legend .chip::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--fc); }
+@keyframes flash { 0%, 60% { box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--fc) 35%, #fff); } 100% { box-shadow: none; } }
+tr.flash td { animation: flash 1.8s ease-out; }
 
 /* friends board (index.html) */
 .entry { border-top: 1px solid var(--rule); padding: 12px 0; }

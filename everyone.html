@@ -105,7 +105,17 @@ function weekStats(w) {
 }
 
 function renderLegend() {
-  $("legend").innerHTML = Object.values(FRIENDS).map((f) => `<span style="--fc: var(--${f.key})">${esc(f.label)}</span>`).join("");
+  $("legend").innerHTML = Object.values(FRIENDS).map((f) => `<button type="button" class="chip" data-key="${f.key}" style="--fc: var(--${f.key})">${esc(f.label)}</button>`).join("");
+  $("legend").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => jumpTo(b.dataset.key)));
+}
+
+// Scroll the season table to a friend's row and flash it.
+function jumpTo(k) {
+  if (friendsOnly) { friendsOnly = false; $("friendsOnly").setAttribute("aria-pressed", "false"); renderAll(); }
+  const row = $("season").querySelector(`tbody tr[data-f="${k}"]`);
+  if (!row) return;
+  row.scrollIntoView({ block: "center" });
+  row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
 }
 
 function renderSeason() {
