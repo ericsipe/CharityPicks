@@ -69,6 +69,7 @@
    ENTRANTS sets the display order and the names used as keys.
    ============================================================ */
 const ENTRANTS = ["The Daddies", "odds / TD33for99", "odds / Purple Reign", "D-PIGGY$", "Susan"];
+const DISPLAY = (n) => n.replace(/^odds \/ /, "");  // "odds / TD33for99" shows as "TD33for99"
 const COLOR_KEY = { "The Daddies": "me", "odds / TD33for99": "f1", "odds / Purple Reign": "f2", "D-PIGGY$": "f3", "Susan": "f4" };
 
 const WEEKS = [
@@ -214,7 +215,7 @@ function renderSeason() {
   $("season").querySelector("tbody").innerHTML = rows.map((r) => `
     <tr data-f="${COLOR_KEY[r.name] || ""}">
       <td>${tie(r)}${r.rank}</td>
-      <td>${r.name}</td>
+      <td>${DISPLAY(r.name)}</td>
       ${r.per.map((p) => `<td class="num">${p.entered ? p.pts + (p.done ? "" : "*") : "–"}</td>`).join("")}
       <td class="num total">${r.total}${r.live ? ` <span class="live">+${r.live}</span>` : ""}</td>
     </tr>`).join("");
@@ -239,7 +240,7 @@ function renderBoard() {
   $("board").innerHTML = rows.map((r) => `
     <section class="entry" data-f="${COLOR_KEY[r.name] || ""}">
       <div class="head">
-        <span class="name">${r.name}</span>
+        <span class="name">${DISPLAY(r.name)}</span>
         <span class="tally">${r.pts} pt${r.pts === 1 ? "" : "s"}${r.live ? ` <small>(+${r.live} live)</small>` : ""}</span>
       </div>
       <div class="picks">${r.lines.join("")}</div>
