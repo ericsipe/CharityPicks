@@ -29,6 +29,13 @@
    "label": "Wk 4",
    "title": "NFL Week 4 / CFB Week 5",
    "dates": "Sep 28-Oct 5"
+  },
+  {
+   "file": "data/wk5.json",
+   "slate": "slate_01KZ49QZ2QBNTYPWCVRZM7MW2R",
+   "label": "Wk 5",
+   "title": "NFL Week 5 / CFB Week 6",
+   "dates": "Oct 5-12"
   }
  ]
 }
