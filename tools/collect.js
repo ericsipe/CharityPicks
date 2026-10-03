@@ -37,19 +37,34 @@ function weekButtons() {
 }
 const slateOf = (b) => b.dataset.testid.replace("standings-period-", "");
 
+async function tokenWorks(tok) {
+  try { return (await fetch(`${API}/contests/${CONTEST}`, { headers: { Authorization: tok } })).ok; } catch { return false; }
+}
+
+// The Splash web app keeps its access token in a cookie the tab can read. That is the
+// first choice (10/3/26: the XHR capture below stopped working because re-clicking the
+// selected week no longer sends a request). The capture stays as the fallback, now
+// accepting only a Bearer token (a "Basic" header from another request fooled it on 10/2).
 async function splashToken() {
   if (window.__splashTok) return window.__splashTok;
+  const c = document.cookie.split(";").map((s) => s.trim()).find((s) => s.startsWith("accessToken="));
+  if (c) {
+    const v = decodeURIComponent(c.slice("accessToken=".length));
+    const tok = /^Bearer /i.test(v) ? v : `Bearer ${v}`;
+    if (v && await tokenWorks(tok)) return (window.__splashTok = tok);
+  }
   const orig = XMLHttpRequest.prototype.setRequestHeader;
   XMLHttpRequest.prototype.setRequestHeader = function (k, v) {
-    if (/^authorization$/i.test(k)) window.__splashTok = v;
+    if (/^authorization$/i.test(k) && /^Bearer /i.test(v)) window.__splashTok = v;
     return orig.apply(this, arguments);
   };
-  // Nudge the app into making a request so the header shows up: re-click the week
-  // that is already selected, which reloads its data without changing the view.
-  const btn = weekButtons().find((b) => b.getAttribute("aria-current") === "true") || weekButtons()[0];
+  // Nudge the app into making a request so the header shows up: click a week other than
+  // the selected one (the data comes from the API afterwards, so the view does not matter).
+  const btns = weekButtons();
+  const btn = btns.find((b) => b.getAttribute("aria-current") !== "true") || btns[0];
   if (btn) btn.click();
   for (let i = 0; i < 60 && !window.__splashTok; i++) await sleep(250);
-  if (!window.__splashTok) throw new Error("Could not capture Splash's token; reload the page and run again.");
+  if (!window.__splashTok) throw new Error("Could not get Splash's token (no accessToken cookie and no Bearer header seen); reload the page and run again.");
   return window.__splashTok;
 }
 

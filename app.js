@@ -135,10 +135,16 @@ function renderLegend() {
 // Scroll the season table to a friend's row and flash it.
 function jumpTo(k) {
   if (friendsOnly && $("friendsOnly")) { friendsOnly = false; $("friendsOnly").setAttribute("aria-pressed", "false"); renderAll(); }
-  const row = $("season").querySelector(`tbody tr[data-f="${k}"]`);
+  flashRow($("season").querySelector(`tbody tr[data-f="${k}"]`));
+}
+function flashRow(row) {
   if (!row) return;
   row.scrollIntoView({ block: "center" });
   row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
+}
+// Clicking an entrant in the season table scrolls to that entrant's picks in the week board below.
+function showPicks(id) {
+  flashRow($("board").querySelector(`tbody tr[data-id="${CSS.escape(id)}"]`));
 }
 
 function renderSeason() {
@@ -159,13 +165,14 @@ function renderSeason() {
   if ($("count")) $("count").textContent = `${shown.length} of ${rows.length} entries`;
   $("season").querySelector("thead").innerHTML = `<tr><th>#</th><th>Entrant</th>${WEEKS.map((w, i) => `<th class="num"><button type="button" data-i="${i}" aria-pressed="${i === selected}">${esc(w.label)}</button></th>`).join("")}<th class="num">Total</th></tr>`;
   $("season").querySelector("tbody").innerHTML = shown.map((r) => `
-    <tr${rowAttr(r.e)}>
+    <tr${rowAttr(r.e)} data-id="${esc(key(r.e))}" title="Show this entrant's picks for the selected week">
       <td>${tie(r)}${r.rank}</td>
       <td>${nameCell(r.e)}</td>
       ${r.per.map((p) => `<td class="num">${p.entered ? p.pts + (p.done ? "" : "*") : "–"}</td>`).join("")}
       <td class="num total">${r.total}${r.live ? ` <span class="live">+${r.live}</span>` : ""}</td>
     </tr>`).join("");
   $("season").querySelectorAll("thead button").forEach((b) => b.addEventListener("click", () => { selected = +b.dataset.i; renderAll(); }));
+  $("season").querySelectorAll("tbody tr[data-id]").forEach((tr) => tr.addEventListener("click", () => showPicks(tr.dataset.id)));
 }
 
 function renderTabs() {
@@ -191,7 +198,7 @@ function renderBoard() {
     if ($("pop")) $("pop").innerHTML = ""; return;
   }
   $("board").querySelector("tbody").innerHTML = rows.map((r) => `
-    <tr${rowAttr(r.e)}>
+    <tr${rowAttr(r.e)} data-id="${esc(key(r.e))}">
       <td>${r.rank}</td>
       <td>${nameCell(r.e)}</td>
       <td class="num total">${r.pts}${r.live ? ` <span class="live">+${r.live}</span>` : ""}${r.done ? "" : "*"}</td>
