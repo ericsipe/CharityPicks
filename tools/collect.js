@@ -17,8 +17,9 @@
    token stays inside the tab: the script borrows it from the app's own requests and
    never returns it. Splash's Content-Security-Policy blocks fetch() to localhost, so
    the result travels by a plain navigation instead, which CSP cannot stop.
-   Each week button carries its slate id in data-testid="standings-period-<slate>",
-   so no week needs to be clicked to find its id.
+   Week slate ids come from the week picker without selecting a week: the old week
+   buttons (data-testid="standings-period-<slate>") or, since 10/2026, the options of
+   the week dropdown (see weekList).
 
    WHAT EACH WEEK LOOKS LIKE
    { slate, label, title, dates, lockedAt, collectedAt,
@@ -35,7 +36,35 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function weekButtons() {
   return [...document.querySelectorAll('button[data-testid^="standings-period-slate_"]')];
 }
-const slateOf = (b) => b.dataset.testid.replace("standings-period-", "");
+
+// The weeks as [{ slate, text }]. Until 10/2026 each week was a button carrying its slate id in
+// data-testid. Splash then replaced the buttons with a Radix select (trigger
+// data-testid="standings-period-select-trigger") whose options are built only while it is open
+// and carry no slate id in the DOM; the id is the option's React `value` prop. So: use the
+// buttons if present, otherwise open the dropdown, read each option's value, and close it.
+function reactValue(el) {
+  const k = Object.keys(el).find((k) => k.startsWith("__reactFiber"));
+  for (let f = k && el[k], i = 0; f && i < 15; f = f.return, i++) {
+    const v = f.memoizedProps?.value;
+    if (typeof v === "string" && v.startsWith("slate_")) return v;
+  }
+  return null;
+}
+async function weekList() {
+  const btns = weekButtons();
+  if (btns.length) return btns.map((b) => ({ slate: b.dataset.testid.replace("standings-period-", ""), text: b.textContent }));
+  const trigger = document.querySelector('[data-testid="standings-period-select-trigger"]');
+  if (!trigger) return [];
+  let opts = [];
+  for (let attempt = 0; attempt < 2 && !opts.length; attempt++) {
+    trigger.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }));
+    trigger.click();
+    for (let i = 0; i < 20 && !opts.length; i++) { await sleep(150); opts = [...document.querySelectorAll('[role="option"]')]; }
+  }
+  const weeks = opts.map((o) => ({ slate: reactValue(o), text: o.textContent })).filter((w) => w.slate);
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  return weeks;
+}
 
 async function tokenWorks(tok) {
   try { return (await fetch(`${API}/contests/${CONTEST}`, { headers: { Authorization: tok } })).ok; } catch { return false; }
@@ -81,8 +110,8 @@ function dateRange(text, today) {
   return [a, new Date(b.getTime() + 86400000)];
 }
 
-function describeButton(b, index) {
-  const text = b.textContent.trim().replace(/\s+/g, " ").replace(/live$/i, "").trim();
+function describeWeek(w, index) {
+  const text = w.text.trim().replace(/\s+/g, " ").replace(/live$/i, "").trim();
   const m = text.match(/^(NFL Week \d+) \| (.+?)([A-Z][a-z]{2} \d+.*)$/);
   return { label: `Wk ${index + 1}`, title: m ? `${m[1]} / ${m[2].trim()}` : text, dates: m ? m[3] : "" };
 }
@@ -119,15 +148,15 @@ async function collectSlate(slate, meta) {
 }
 
 // Which weeks to collect: the one whose date range contains today, and the next one.
-function targetWeeks() {
+async function targetWeeks() {
   const today = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   today.setHours(12, 0, 0, 0);
-  const btns = weekButtons();
-  if (!btns.length) throw new Error("No week buttons on this page; open the Picks by Week view.");
-  let idx = btns.findIndex((b) => { const r = dateRange(b.textContent, today); return r && today >= r[0] && today < r[1]; });
-  if (idx < 0) idx = btns.findIndex((b) => b.textContent.trim().endsWith("live"));
-  if (idx < 0) throw new Error("No week button matches today's date.");
-  return [idx, idx + 1].filter((i) => i < btns.length).map((i) => ({ index: i, button: btns[i] }));
+  const weeks = await weekList();
+  if (!weeks.length) throw new Error("No weeks found (no week buttons, no week dropdown); open the Picks by Week view.");
+  let idx = weeks.findIndex((w) => { const r = dateRange(w.text, today); return r && today >= r[0] && today < r[1]; });
+  if (idx < 0) idx = weeks.findIndex((w) => w.text.trim().endsWith("live"));
+  if (idx < 0) throw new Error("No week matches today's date.");
+  return [idx, idx + 1].filter((i) => i < weeks.length).map((i) => ({ index: i, week: weeks[i] }));
 }
 
 async function handOff(obj) {
@@ -144,8 +173,8 @@ async function handOff(obj) {
 async function runCollector() {
   await splashToken();
   const out = {};
-  for (const { index, button } of targetWeeks()) {
-    out[`wk${index + 1}`] = await collectSlate(slateOf(button), describeButton(button, index));
+  for (const { index, week } of await targetWeeks()) {
+    out[`wk${index + 1}`] = await collectSlate(week.slate, describeWeek(week, index));
   }
   const summary = Object.entries(out).map(([k, w]) => `${k} ${w.slate} ${w.entries.length} entries, locks ${w.lockedAt.slice(0, 10)}`).join("; ");
   const size = await handOff(out);
