@@ -19,6 +19,7 @@ const MODE = document.body.dataset.mode || "everyone";   // "friends" on index.h
 const FRIENDS_PAGE = MODE === "friends";
 const $ = (id) => document.getElementById(id);
 let WEEKS = [], selected = 0, friendsOnly = false, query = "";
+let sortBy = "total", sortDir = -1;   // season table: "rank" | "name" | "total" | week index; -1 = high first
 
 const friend = (e) => FRIENDS[e.name] || FRIENDS[e.handle] || null;
 const key = (e) => e.id;
@@ -155,15 +156,27 @@ function renderSeason() {
     const per = stats.map((s) => s[key(e)] || { pts: 0, live: 0, done: true, entered: false });
     return { e, per, total: per.reduce((a, r) => a + r.pts, 0), live: per.reduce((a, r) => a + r.live, 0) };
   });
-  rows.sort((a, b) => b.total - a.total || b.live - a.live || a.e.handle.localeCompare(b.e.handle));
+  const byTotal = (a, b) => b.total - a.total || b.live - a.live || a.e.handle.localeCompare(b.e.handle);
+  rows.sort(byTotal);
   const q = query.trim().toLowerCase();
   const shown = rows.filter((r) => ((!friendsOnly && !FRIENDS_PAGE) || friend(r.e)) && (!q || `${r.e.handle} ${r.e.name || ""}`.toLowerCase().includes(q)));
   const ranked = FRIENDS_PAGE ? shown : rows;     // friends page ranks the five among themselves
   let rank = 0, prev = null;
   ranked.forEach((r, i) => { if (r.total !== prev) { rank = i + 1; prev = r.total; } r.rank = rank; });
   const tie = (r) => ranked.filter((x) => x.total === r.total).length > 1 ? "T" : "";
+  // Ranks always come from the season total; clicking a header only changes the order shown.
+  const label = (r) => ((FRIENDS_PAGE && friend(r.e)?.label) || (r.e.name && r.e.name !== r.e.handle ? r.e.name : r.e.handle)).toLowerCase();
+  const wk = (r, i) => (r.per[i].entered ? r.per[i].pts + r.per[i].live / 10 : -1);
+  const cmp = sortBy === "name" ? (a, b) => sortDir * label(a).localeCompare(label(b))
+    : sortBy === "rank" ? (a, b) => sortDir * byTotal(a, b)
+    : sortBy === "total" ? (a, b) => -sortDir * byTotal(a, b)
+    : (a, b) => sortDir * (wk(a, sortBy) - wk(b, sortBy));
+  shown.sort((a, b) => cmp(a, b) || byTotal(a, b));
   if ($("count")) $("count").textContent = `${shown.length} of ${rows.length} entries`;
-  $("season").querySelector("thead").innerHTML = `<tr><th>#</th><th>Entrant</th>${WEEKS.map((w, i) => `<th class="num"><button type="button" data-i="${i}" aria-pressed="${i === selected}">${esc(w.label)}</button></th>`).join("")}<th class="num">Total</th></tr>`;
+  const arrow = (k) => (sortBy === k ? (sortDir < 0 ? " ▼" : " ▲") : "");
+  const aria = (k) => (sortBy === k ? ` aria-sort="${sortDir < 0 ? "descending" : "ascending"}"` : "");
+  const head = (k, text, cls = "") => `<th${cls}${aria(k)}><button type="button" class="sort" data-sort="${k}">${text}${arrow(k)}</button></th>`;
+  $("season").querySelector("thead").innerHTML = `<tr>${head("rank", "#")}${head("name", "Entrant")}${WEEKS.map((w, i) => `<th class="num"${aria(i)}><button type="button" data-i="${i}" aria-pressed="${i === selected}">${esc(w.label)}${arrow(i)}</button></th>`).join("")}${head("total", "Total", ' class="num"')}</tr>`;
   $("season").querySelector("tbody").innerHTML = shown.map((r) => `
     <tr${rowAttr(r.e)} data-id="${esc(key(r.e))}" title="Show this entrant's picks for the selected week">
       <td>${tie(r)}${r.rank}</td>
@@ -171,7 +184,10 @@ function renderSeason() {
       ${r.per.map((p) => `<td class="num">${p.entered ? p.pts + (p.done ? "" : "*") : "–"}</td>`).join("")}
       <td class="num total">${r.total}${r.live ? ` <span class="live">+${r.live}</span>` : ""}</td>
     </tr>`).join("");
-  $("season").querySelectorAll("thead button").forEach((b) => b.addEventListener("click", () => { selected = +b.dataset.i; renderAll(); }));
+  // Same header again flips the order; a new header starts high-first (A-Z for names, 1-up for #).
+  const setSort = (k) => { sortDir = sortBy === k ? -sortDir : (k === "name" || k === "rank" ? 1 : -1); sortBy = k; };
+  $("season").querySelectorAll("thead button.sort").forEach((b) => b.addEventListener("click", () => { setSort(b.dataset.sort); renderSeason(); }));
+  $("season").querySelectorAll("thead button[data-i]").forEach((b) => b.addEventListener("click", () => { setSort(+b.dataset.i); selected = +b.dataset.i; renderAll(); }));
   $("season").querySelectorAll("tbody tr[data-id]").forEach((tr) => tr.addEventListener("click", () => showPicks(tr.dataset.id)));
 }
 

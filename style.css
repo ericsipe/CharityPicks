@@ -75,6 +75,8 @@ details summary { cursor: pointer; color: var(--accent); font-size: 14px; font-w
 @keyframes flash { 0%, 60% { box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--fc, var(--accent)) 35%, #fff); } 100% { box-shadow: none; } }
 tr.flash td { animation: flash 1.8s ease-out; }
 #season tbody tr[data-id] { cursor: pointer; }
+thead button.sort { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; }
+thead button.sort:hover { color: var(--ink); }
 
 /* friends board (index.html) */
 .entry { border-top: 1px solid var(--rule); padding: 12px 0; }
