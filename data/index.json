@@ -50,6 +50,13 @@
    "label": "Wk 7",
    "title": "NFL Week 7 / CFB Week 8",
    "dates": "Oct 19-26"
+  },
+  {
+   "file": "data/wk8.json",
+   "slate": "slate_01KZ49QZ2Q1YJEEC49E9T6WJ5W",
+   "label": "Wk 8",
+   "title": "NFL Week 8 / CFB Week 9",
+   "dates": "Oct 26-Nov 2"
   }
  ]
 }
