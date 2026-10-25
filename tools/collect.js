@@ -147,7 +147,10 @@ async function collectSlate(slate, meta) {
   return week;
 }
 
-// Which weeks to collect: the one whose date range contains today, and the next one.
+// Which weeks to collect: the one whose date range contains today, the next one, and the one
+// before it. The previous week matters: its Sunday/Monday NFL games finish after the last Saturday
+// run, so without it the stored week froze with those picks ungraded (found 10/25/26: wk3-wk6
+// stored stale pts; the page covered it by re-grading from ESPN, but season sums from the files were low).
 async function targetWeeks() {
   const today = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
   today.setHours(12, 0, 0, 0);
@@ -156,7 +159,7 @@ async function targetWeeks() {
   let idx = weeks.findIndex((w) => { const r = dateRange(w.text, today); return r && today >= r[0] && today < r[1]; });
   if (idx < 0) idx = weeks.findIndex((w) => w.text.trim().endsWith("live"));
   if (idx < 0) throw new Error("No week matches today's date.");
-  return [idx, idx + 1].filter((i) => i < weeks.length).map((i) => ({ index: i, week: weeks[i] }));
+  return [idx - 1, idx, idx + 1].filter((i) => i >= 0 && i < weeks.length).map((i) => ({ index: i, week: weeks[i] }));
 }
 
 async function handOff(obj) {
