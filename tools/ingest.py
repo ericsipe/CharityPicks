@@ -3,7 +3,7 @@
 Run from anywhere:  python C:/Users/erics/CharityPicks/tools/ingest.py
 Exit code 0 = published (or nothing new); anything else = look at the message.
 """
-import json, pathlib, subprocess, sys, datetime
+import json, pathlib, subprocess, sys, datetime, time
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 DATA = REPO / "data"
@@ -12,6 +12,12 @@ INDEX = DATA / "index.json"
 
 
 def main() -> int:
+    # The collector hands off 2.5 s after it returns and the task waits only ~3 s, so give the
+    # receiver up to 20 s to write the file before calling the run a failure.
+    for _ in range(40):
+        if INCOMING.exists():
+            break
+        time.sleep(0.5)
     if not INCOMING.exists():
         print("no data/incoming.json; the collector did not hand anything off")
         return 2

