@@ -289,7 +289,7 @@ def main():
         rows = rows[:a.top]
     print(f"Odds screen {now.astimezone(datetime.timezone(datetime.timedelta(hours=-5))).strftime('%a %m/%d %I:%M %p')} Central"
           " — cover % is AT THE POOL NUMBER; fair lines are home spreads")
-    print(f"{'Game':12} {'Pool(H)':>7} {'Pick':12} {'Blend':>6} {'Kalshi':>7} {'Poly':>7} "
+    print(f"{'Game':12} {'Pool(H)':>7} {'Pick':12} {'Cover%':>6} {'Kalshi':>7} {'Poly':>7} "
           f"{'K fair':>6} {'P fair':>6} {'DK':>6}  K$OI/P$liq")
     for r in rows:
         k, p = r["kalshi"] or {}, r["poly"] or {}
