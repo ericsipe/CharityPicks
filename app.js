@@ -161,14 +161,16 @@ function renderSeason() {
   const q = query.trim().toLowerCase();
   const shown = rows.filter((r) => ((!friendsOnly && !FRIENDS_PAGE) || friend(r.e)) && (!q || `${r.e.handle} ${r.e.name || ""}`.toLowerCase().includes(q)));
   const ranked = FRIENDS_PAGE ? shown : rows;     // friends page ranks the five among themselves
+  // The # column ranks by whatever is sorted: a week header ranks that week's points (Eric 10/31),
+  // anything else ranks the season total. Entrants who sat a week out rank below everyone who played.
+  const score = typeof sortBy === "number" ? (r) => (r.per[sortBy].entered ? r.per[sortBy].pts : -1) : (r) => r.total;
   let rank = 0, prev = null;
-  ranked.forEach((r, i) => { if (r.total !== prev) { rank = i + 1; prev = r.total; } r.rank = rank; });
-  const tie = (r) => ranked.filter((x) => x.total === r.total).length > 1 ? "T" : "";
-  // Ranks always come from the season total; clicking a header only changes the order shown.
+  [...ranked].sort((a, b) => score(b) - score(a)).forEach((r, i) => { if (score(r) !== prev) { rank = i + 1; prev = score(r); } r.rank = rank; });
+  const tie = (r) => ranked.filter((x) => score(x) === score(r)).length > 1 ? "T" : "";
   const label = (r) => ((FRIENDS_PAGE && friend(r.e)?.label) || (r.e.name && r.e.name !== r.e.handle ? r.e.name : r.e.handle)).toLowerCase();
   const wk = (r, i) => (r.per[i].entered ? r.per[i].pts + r.per[i].live / 10 : -1);
   const cmp = sortBy === "name" ? (a, b) => sortDir * label(a).localeCompare(label(b))
-    : sortBy === "rank" ? (a, b) => sortDir * byTotal(a, b)
+    : sortBy === "rank" ? (a, b) => sortDir * (a.rank - b.rank) || byTotal(a, b)
     : sortBy === "total" ? (a, b) => -sortDir * byTotal(a, b)
     : (a, b) => sortDir * (wk(a, sortBy) - wk(b, sortBy));
   shown.sort((a, b) => cmp(a, b) || byTotal(a, b));
