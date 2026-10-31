@@ -5,7 +5,7 @@
 # server in an iframe and posts the collected JSON to it; the iframe (same origin as
 # this server) then POSTs the JSON here, and we save it and exit.
 import json, sys, pathlib, threading, urllib.parse, base64, gzip
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 OUT = pathlib.Path(sys.argv[1])
 LOG = OUT.with_suffix(".log")
@@ -36,6 +36,11 @@ def log(msg):
         f.write(msg + "\n")
 
 class H(BaseHTTPRequestHandler):
+    # Chrome opens spare connections it may never use (preconnect). On a single-threaded server
+    # with no timeout one idle socket blocked the real hand-off forever (10/30/26), so serve each
+    # connection on its own thread and drop any that stay silent for 10 s.
+    timeout = 10
+
     def do_GET(self):
         if self.path.startswith("/note?"):
             log("NOTE " + urllib.parse.unquote(self.path[6:]))
@@ -61,7 +66,8 @@ class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
 
-srv = HTTPServer(("127.0.0.1", 8765), H)
+srv = ThreadingHTTPServer(("127.0.0.1", 8765), H)
+srv.daemon_threads = True
 log("listening")
 srv.serve_forever()
 log("done")
