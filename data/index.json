@@ -64,6 +64,13 @@
    "label": "Wk 9",
    "title": "NFL Week 9 / CFB Week 10",
    "dates": "Nov 2-9"
+  },
+  {
+   "file": "data/wk10.json",
+   "slate": "slate_01KZ49QZ2RDEAN85SNJ9PZCRZT",
+   "label": "Wk 10",
+   "title": "NFL Week 10 / CFB Week 11",
+   "dates": "Nov 9-16"
   }
  ]
 }
