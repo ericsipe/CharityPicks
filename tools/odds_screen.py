@@ -28,6 +28,19 @@ import argparse, datetime, difflib, gzip, json, re, sys, urllib.request
 UA = {"User-Agent": "CharityPicks odds screen (personal use)", "Accept-Encoding": "gzip"}
 
 
+def central(dt_utc):
+    """An aware UTC datetime as US Central time. The Windows store Python has no tzdata, so
+    the DST rule is spelled out: CDT from 2 AM on the second Sunday of March to 2 AM on the
+    first Sunday of November (11/7/26: the screen still printed CDT a week after the change)."""
+    y = dt_utc.year
+    def nth_sunday(month, n):
+        d = datetime.date(y, month, 1)
+        d += datetime.timedelta(days=(6 - d.weekday()) % 7 + 7 * (n - 1))
+        return datetime.datetime(d.year, d.month, d.day, 8, tzinfo=datetime.timezone.utc)  # 2 AM CST = 08:00Z
+    cdt = nth_sunday(3, 2) <= dt_utc < nth_sunday(11, 1) - datetime.timedelta(hours=1)  # 2 AM CDT = 07:00Z
+    return dt_utc.astimezone(datetime.timezone(datetime.timedelta(hours=-5 if cdt else -6)))
+
+
 def get(url):
     req = urllib.request.Request(url, headers=UA)
     with urllib.request.urlopen(req, timeout=30) as r:
@@ -238,9 +251,9 @@ def main():
     board = json.load(open(a.board, encoding="utf-8"))
     now = datetime.datetime.now(datetime.timezone.utc)
     board = [g for g in board if datetime.datetime.fromisoformat(g["start"].replace("Z", "+00:00")) > now]
-    days = sorted({(datetime.datetime.fromisoformat(g["start"].replace("Z", "+00:00"))
-                    - datetime.timedelta(hours=5)).strftime("%Y%m%d") for g in board})
-    today = (now - datetime.timedelta(hours=5)).strftime("%Y-%m-%d")
+    days = sorted({central(datetime.datetime.fromisoformat(g["start"].replace("Z", "+00:00"))).strftime("%Y%m%d")
+                   for g in board})
+    today = central(now).strftime("%Y-%m-%d")
 
     K, P, D = kalshi_ladders(), poly_ladders(today), espn_lines(days)
     rows = []
@@ -287,7 +300,7 @@ def main():
     rows.sort(key=lambda r: -(r["p"] or 0))
     if a.top:
         rows = rows[:a.top]
-    print(f"Odds screen {now.astimezone(datetime.timezone(datetime.timedelta(hours=-5))).strftime('%a %m/%d %I:%M %p')} Central"
+    print(f"Odds screen {central(now).strftime('%a %m/%d %I:%M %p')} Central"
           " — cover % is AT THE POOL NUMBER; fair lines are home spreads")
     print(f"{'Game':12} {'Pool(H)':>7} {'Pick':12} {'Cover%':>6} {'Kalshi':>7} {'Poly':>7} "
           f"{'K fair':>6} {'P fair':>6} {'DK':>6}  K$OI/P$liq")
