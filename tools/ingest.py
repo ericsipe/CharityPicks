@@ -57,6 +57,12 @@ def main() -> int:
     if not changed:
         print("nothing new")
         return 0
+    # Closing lines for newly finished games (the page's CLV column). Never let this stop a publish.
+    try:
+        import closes
+        closes.main()
+    except Exception as e:  # noqa: BLE001
+        print(f"closing lines skipped: {e}")
     stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     msg = f"Collector: {', '.join(changed)} at {stamp}"
     for cmd in (["git", "add", "data"], ["git", "commit", "-q", "-m", msg], ["git", "push", "-q", "origin", "main"]):

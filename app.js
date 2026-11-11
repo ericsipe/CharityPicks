@@ -19,7 +19,11 @@ const MODE = document.body.dataset.mode || "everyone";   // "friends" on index.h
 const FRIENDS_PAGE = MODE === "friends";
 const $ = (id) => document.getElementById(id);
 let WEEKS = [], selected = 0, friendsOnly = false, query = "";
-let sortBy = "total", sortDir = -1;   // season table: "rank" | "name" | "total" | week index; -1 = high first
+let sortBy = "total", sortDir = -1;   // season table: "rank" | "name" | "total" | "clv" | week index; -1 = high first
+let CLOSES = {};                      // gameId -> closing HOME spread (data/closes.json, written by tools/closes.py)
+// Closing-line value of one pick: points by which the frozen pool line beats the closing line. null = no close stored.
+function pickClv(p, games) { const g = games[p[0]], c = CLOSES[p[0]]; if (!g || c == null) return null; return g.home === p[1] ? g.hsp - c : c - g.hsp; }
+const fmtClv = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1);
 
 const friend = (e) => FRIENDS[e.name] || FRIENDS[e.handle] || null;
 const key = (e) => e.id;
@@ -154,8 +158,12 @@ function renderSeason() {
   for (const w of WEEKS) for (const e of w.entries) if (!all.has(key(e))) all.set(key(e), e);
   const rows = [...all.values()].map((e) => {
     const per = stats.map((s) => s[key(e)] || { pts: 0, live: 0, done: true, entered: false });
-    return { e, per, total: per.reduce((a, r) => a + r.pts, 0), live: per.reduce((a, r) => a + r.live, 0) };
+    // CLV: average points by which the entrant's pool lines beat the closing lines, over picks whose game has closed.
+    let n = 0, sum = 0, beat = 0;
+    for (const w of WEEKS) for (const x of w.entries) if (key(x) === key(e)) for (const p of x.picks) { const v = pickClv(p, w.games); if (v != null) { n++; sum += v; if (v >= 1) beat++; } }
+    return { e, per, total: per.reduce((a, r) => a + r.pts, 0), live: per.reduce((a, r) => a + r.live, 0), clv: n ? sum / n : null, clvN: n, clvBeat: beat };
   });
+  const hasClv = rows.some((r) => r.clv != null);
   const byTotal = (a, b) => b.total - a.total || b.live - a.live || a.e.handle.localeCompare(b.e.handle);
   rows.sort(byTotal);
   const q = query.trim().toLowerCase();
@@ -172,18 +180,20 @@ function renderSeason() {
   const cmp = sortBy === "name" ? (a, b) => sortDir * label(a).localeCompare(label(b))
     : sortBy === "rank" ? (a, b) => sortDir * (a.rank - b.rank) || byTotal(a, b)
     : sortBy === "total" ? (a, b) => -sortDir * byTotal(a, b)
+    : sortBy === "clv" ? (a, b) => sortDir * ((a.clv ?? -99) - (b.clv ?? -99))
     : (a, b) => sortDir * (wk(a, sortBy) - wk(b, sortBy));
   shown.sort((a, b) => cmp(a, b) || byTotal(a, b));
   if ($("count")) $("count").textContent = `${shown.length} of ${rows.length} entries`;
   const arrow = (k) => (sortBy === k ? (sortDir < 0 ? " ▼" : " ▲") : "");
   const aria = (k) => (sortBy === k ? ` aria-sort="${sortDir < 0 ? "descending" : "ascending"}"` : "");
   const head = (k, text, cls = "") => `<th${cls}${aria(k)}><button type="button" class="sort" data-sort="${k}">${text}${arrow(k)}</button></th>`;
-  $("season").querySelector("thead").innerHTML = `<tr>${head("rank", "#")}${head("name", "Entrant")}${WEEKS.map((w, i) => `<th class="num"${aria(i)}><button type="button" data-i="${i}" aria-pressed="${i === selected}">${esc(w.label)}${arrow(i)}</button></th>`).join("")}${head("total", "Total", ' class="num"')}</tr>`;
+  $("season").querySelector("thead").innerHTML = `<tr>${head("rank", "#")}${head("name", "Entrant")}${WEEKS.map((w, i) => `<th class="num"${aria(i)}><button type="button" data-i="${i}" aria-pressed="${i === selected}">${esc(w.label)}${arrow(i)}</button></th>`).join("")}${hasClv ? head("clv", "CLV", ' class="num clv" title="Closing-line value: average points by which the pool lines this entrant took beat the DraftKings closing lines. The pool line freezes Tuesday; the market moves until kickoff."') : ""}${head("total", "Total", ' class="num"')}</tr>`;
   $("season").querySelector("tbody").innerHTML = shown.map((r) => `
     <tr${rowAttr(r.e)} data-id="${esc(key(r.e))}" title="Show this entrant's picks for the selected week">
       <td>${tie(r)}${r.rank}</td>
       <td>${nameCell(r.e)}</td>
       ${r.per.map((p) => `<td class="num">${p.entered ? p.pts + (p.done ? "" : "*") : "–"}</td>`).join("")}
+      ${hasClv ? `<td class="num clv ${r.clv == null ? "" : r.clv >= 1 ? "hi" : r.clv < 0 ? "lo" : ""}" title="${r.clvBeat} of ${r.clvN} picks beat the closing line by a point or more">${r.clv == null ? "–" : fmtClv(r.clv)}</td>` : ""}
       <td class="num total">${r.total}${r.live ? ` <span class="live">+${r.live}</span>` : ""}</td>
     </tr>`).join("");
   // Same header again flips the order; a new header starts high-first (A-Z for names, 1-up for #).
@@ -220,7 +230,7 @@ function renderBoard() {
       <td>${r.rank}</td>
       <td>${nameCell(r.e)}</td>
       <td class="num total">${r.pts}${r.live ? ` <span class="live">+${r.live}</span>` : ""}${r.done ? "" : "*"}</td>
-      <td><div class="picks">${r.e.picks.map((p) => { const g = gradePick(p, w.games); return `<span class="pick ${g.cls}"><b>${esc(g.team)}</b> ${g.sp} ${g.word} <span class="d">${esc(g.detail)}</span></span>`; }).join("")}</div></td>
+      <td><div class="picks">${r.e.picks.map((p) => { const g = gradePick(p, w.games); const v = pickClv(p, w.games); const tip = v == null ? "" : ` title="Closed ${esc(g.team)} ${fmtSpread(p[2] - v)} · ${fmtClv(v)} vs the closing line"`; return `<span class="pick ${g.cls}"${tip}><b>${esc(g.team)}</b> ${g.sp} ${g.word} <span class="d">${esc(g.detail)}</span></span>`; }).join("")}</div></td>
     </tr>`).join("");
   const pop = {};
   for (const e of w.entries) for (const p of e.picks) { const k = `${p[1]} ${fmtSpread(p[2])}`; pop[k] = pop[k] || { n: 0, grade: p[3], gid: p[0], team: p[1], spread: p[2] }; pop[k].n++; }
@@ -234,11 +244,12 @@ async function load() {
   try {
     const idx = await (await fetch("data/index.json", { cache: "no-store" })).json();
     WEEKS = await Promise.all(idx.weeks.map((w) => fetch(w.file, { cache: "no-store" }).then((r) => r.json())));
+    CLOSES = await fetch("data/closes.json", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
     // Open on the newest week that has picks; a week with none yet still gets a tab.
     selected = Math.max(0, ...WEEKS.map((w, i) => (w.entries.length ? i : -1)));
     const latest = WEEKS[selected];
     renderLegend(); renderAll();
-    $("note").textContent = "Picks and lines come from Splash. ✓/✗ are Splash's official grades, or ESPN finals until Splash confirms them; ▲/▼ are live leaders from ESPN, refreshed every minute while a game is on. * = week still in progress.";
+    $("note").textContent = "Picks and lines come from Splash. ✓/✗ are Splash's official grades, or ESPN finals until Splash confirms them; ▲/▼ are live leaders from ESPN, refreshed every minute while a game is on. * = week still in progress. CLV = average points by which an entrant's pool lines beat the DraftKings closing lines (hover a pick for its close).";
     let liveNote = "";
     const stamp = () => { $("updated").textContent = `${latest.entries.length} entries · picks collected ${ct(latest.collectedAt, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} CT` + (liveNote ? ` · live scores ${liveNote}` : ""); };
     stamp();

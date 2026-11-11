@@ -107,3 +107,16 @@ pre.season { margin: 0; font: 13px/1.6 ui-monospace, Menlo, Consolas, monospace;
   .pick .d { display: none; }
   input[type="search"] { min-width: 150px; flex: 1; }
 }
+
+/* CLV column: pinned just left of Total so both stay in view; green when the entrant averages a point
+   or more better than the close, red when worse than the close. */
+#season th:last-child, #season td:last-child { width: 72px; min-width: 72px; max-width: 72px; box-sizing: border-box; }
+#season .clv { position: sticky; right: 72px; background: var(--card); box-shadow: -6px 0 6px -6px rgba(16,24,40,.18); }
+#season tr:has(.clv) > :last-child { box-shadow: none; }
+#season thead th.clv { z-index: 2; }
+#season tbody tr:hover td.clv { background: var(--band); }
+#season tr[data-f] td.clv { background: color-mix(in srgb, var(--fc) 8%, #fff); }
+#season tr[data-f]:hover td.clv { background: color-mix(in srgb, var(--fc) 14%, #fff); }
+#season td.clv { color: var(--mute); }
+#season td.clv.hi { color: #15803d; font-weight: 600; }
+#season td.clv.lo { color: #b91c1c; }
