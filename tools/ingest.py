@@ -57,12 +57,13 @@ def main() -> int:
     if not changed:
         print("nothing new")
         return 0
-    # Closing lines for newly finished games (the page's CLV column). Never let this stop a publish.
-    try:
-        import closes
-        closes.main()
-    except Exception as e:  # noqa: BLE001
-        print(f"closing lines skipped: {e}")
+    # Market cover % and closing lines for newly finished games (the page's CLV column and pick
+    # tooltips). Never let either stop a publish.
+    for name in ("covers", "closes"):
+        try:
+            __import__(name).main()
+        except Exception as e:  # noqa: BLE001
+            print(f"{name} skipped: {e}")
     stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     msg = f"Collector: {', '.join(changed)} at {stamp}"
     for cmd in (["git", "add", "data"], ["git", "commit", "-q", "-m", msg], ["git", "push", "-q", "origin", "main"]):
