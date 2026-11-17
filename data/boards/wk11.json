@@ -1,0 +1,792 @@
+[
+ {
+  "lg": "ncaaf",
+  "away": "EMU",
+  "home": "WMU",
+  "awayName": "Eastern Michigan",
+  "homeName": "Western Michigan",
+  "hsp": -14.5,
+  "start": "2026-11-17T23:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "BALL",
+  "home": "OHIO",
+  "awayName": "Ball State",
+  "homeName": "Ohio",
+  "hsp": -10.5,
+  "start": "2026-11-18T00:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "M-OH",
+  "home": "KENT",
+  "awayName": "Miami (OH)",
+  "homeName": "Kent State",
+  "hsp": 8.5,
+  "start": "2026-11-18T00:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "AKR",
+  "home": "MASS",
+  "awayName": "Akron",
+  "homeName": "UMass",
+  "hsp": -3.5,
+  "start": "2026-11-19T00:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "CMU",
+  "home": "BUFF",
+  "awayName": "Central Michigan",
+  "homeName": "Buffalo",
+  "hsp": -1.5,
+  "start": "2026-11-19T00:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "RICE",
+  "home": "TEM",
+  "awayName": "Rice",
+  "homeName": "Temple",
+  "hsp": -2.5,
+  "start": "2026-11-20T00:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "IND",
+  "home": "HOU",
+  "awayName": "Colts",
+  "homeName": "Texans",
+  "hsp": -11.5,
+  "start": "2026-11-20T01:15:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "ISU",
+  "home": "UCF",
+  "awayName": "Iowa State",
+  "homeName": "UCF",
+  "hsp": -2.5,
+  "start": "2026-11-20T23:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "BGSU",
+  "home": "TOL",
+  "awayName": "Bowling Green",
+  "homeName": "Toledo",
+  "hsp": -15.5,
+  "start": "2026-11-21T00:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "CLEM",
+  "home": "DUKE",
+  "awayName": "Clemson",
+  "homeName": "Duke",
+  "hsp": -12.5,
+  "start": "2026-11-21T00:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "UTEP",
+  "home": "AFA",
+  "awayName": "UTEP",
+  "homeName": "Air Force",
+  "hsp": -22.5,
+  "start": "2026-11-21T01:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "ORE",
+  "home": "MSU",
+  "awayName": "Oregon",
+  "homeName": "Michigan State",
+  "hsp": 15.5,
+  "start": "2026-11-21T01:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "UNM",
+  "home": "WYO",
+  "awayName": "New Mexico",
+  "homeName": "Wyoming",
+  "hsp": 7.5,
+  "start": "2026-11-21T02:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "BYU",
+  "home": "KU",
+  "awayName": "BYU",
+  "homeName": "Kansas",
+  "hsp": 5.5,
+  "start": "2026-11-21T17:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "MEM",
+  "home": "NAVY",
+  "awayName": "Memphis",
+  "homeName": "Navy",
+  "hsp": 3.5,
+  "start": "2026-11-21T17:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "VAN",
+  "home": "FLA",
+  "awayName": "Vanderbilt",
+  "homeName": "Florida",
+  "hsp": -13.5,
+  "start": "2026-11-21T17:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "SYR",
+  "home": "BC",
+  "awayName": "Syracuse",
+  "homeName": "Boston College",
+  "hsp": 3.5,
+  "start": "2026-11-21T17:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "COLO",
+  "home": "CIN",
+  "awayName": "Colorado",
+  "homeName": "Cincinnati",
+  "hsp": -3.5,
+  "start": "2026-11-21T17:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "WIS",
+  "home": "PUR",
+  "awayName": "Wisconsin",
+  "homeName": "Purdue",
+  "hsp": 5.5,
+  "start": "2026-11-21T17:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "UNT",
+  "home": "TULN",
+  "awayName": "North Texas",
+  "homeName": "Tulane",
+  "hsp": 6.5,
+  "start": "2026-11-21T17:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "OSU",
+  "home": "NEB",
+  "awayName": "Ohio State",
+  "homeName": "Nebraska",
+  "hsp": 3.5,
+  "start": "2026-11-21T17:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "NW",
+  "home": "MINN",
+  "awayName": "Northwestern",
+  "homeName": "Minnesota",
+  "hsp": 2.5,
+  "start": "2026-11-21T17:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "WAKE",
+  "home": "GT",
+  "awayName": "Wake Forest",
+  "homeName": "Georgia Tech",
+  "hsp": 20.5,
+  "start": "2026-11-21T17:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "ECU",
+  "home": "ARMY",
+  "awayName": "East Carolina",
+  "homeName": "Army",
+  "hsp": -5.5,
+  "start": "2026-11-21T17:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "UNC",
+  "home": "UVA",
+  "awayName": "North Carolina",
+  "homeName": "Virginia",
+  "hsp": -1.5,
+  "start": "2026-11-21T17:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "HOU",
+  "home": "WVU",
+  "awayName": "Houston",
+  "homeName": "West Virginia",
+  "hsp": 7.5,
+  "start": "2026-11-21T18:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "WKU",
+  "home": "LIB",
+  "awayName": "Western Kentucky",
+  "homeName": "Liberty",
+  "hsp": -16.5,
+  "start": "2026-11-21T18:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "MOSU",
+  "home": "JVST",
+  "awayName": "Missouri State",
+  "homeName": "Jacksonville State",
+  "hsp": -11.5,
+  "start": "2026-11-21T19:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "CHAR",
+  "home": "TLSA",
+  "awayName": "Charlotte",
+  "homeName": "Tulsa",
+  "hsp": -22.5,
+  "start": "2026-11-21T19:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "MTU",
+  "home": "SHSU",
+  "awayName": "Middle Tennessee",
+  "homeName": "Sam Houston",
+  "hsp": 5.5,
+  "start": "2026-11-21T19:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "IOWA",
+  "home": "ILL",
+  "awayName": "Iowa",
+  "homeName": "Illinois",
+  "hsp": 7.5,
+  "start": "2026-11-21T19:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "ULM",
+  "home": "APP",
+  "awayName": "Louisiana-Monroe",
+  "homeName": "Appalachian State",
+  "hsp": -13.5,
+  "start": "2026-11-21T19:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "USF",
+  "home": "FAU",
+  "awayName": "South Florida",
+  "homeName": "Florida Atlantic",
+  "hsp": 1.5,
+  "start": "2026-11-21T19:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "DEL",
+  "home": "NMSU",
+  "awayName": "Delaware",
+  "homeName": "New Mexico State",
+  "hsp": 3.5,
+  "start": "2026-11-21T20:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "CCAR",
+  "home": "ULL",
+  "awayName": "Coastal Carolina",
+  "homeName": "Louisiana",
+  "hsp": -10.5,
+  "start": "2026-11-21T20:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "FIU",
+  "home": "KENN",
+  "awayName": "Florida International",
+  "homeName": "Kennesaw State",
+  "hsp": -3.5,
+  "start": "2026-11-21T20:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "UCLA",
+  "home": "MICH",
+  "awayName": "UCLA",
+  "homeName": "Michigan",
+  "hsp": 3.5,
+  "start": "2026-11-21T20:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "NCST",
+  "home": "FSU",
+  "awayName": "NC State",
+  "homeName": "Florida State",
+  "hsp": -9.5,
+  "start": "2026-11-21T20:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "ODU",
+  "home": "CONN",
+  "awayName": "Old Dominion",
+  "homeName": "UConn",
+  "hsp": -12.5,
+  "start": "2026-11-21T20:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "IND",
+  "home": "WASH",
+  "awayName": "Indiana",
+  "homeName": "Washington",
+  "hsp": 8.5,
+  "start": "2026-11-21T20:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "LSU",
+  "home": "TENN",
+  "awayName": "LSU",
+  "homeName": "Tennessee",
+  "hsp": 1.5,
+  "start": "2026-11-21T20:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "TTU",
+  "home": "BAY",
+  "awayName": "Texas Tech",
+  "homeName": "Baylor",
+  "hsp": 3.5,
+  "start": "2026-11-21T20:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "ARK",
+  "home": "TEX",
+  "awayName": "Arkansas",
+  "homeName": "Texas",
+  "hsp": -20.5,
+  "start": "2026-11-21T20:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "RUTG",
+  "home": "PSU",
+  "awayName": "Rutgers",
+  "homeName": "Penn State",
+  "hsp": -24.5,
+  "start": "2026-11-21T20:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "TXAM",
+  "home": "OKLA",
+  "awayName": "Texas A&M",
+  "homeName": "Oklahoma",
+  "hsp": -7.5,
+  "start": "2026-11-21T20:45:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "GAST",
+  "home": "MRSH",
+  "awayName": "Georgia State",
+  "homeName": "Marshall",
+  "hsp": 1.5,
+  "start": "2026-11-21T21:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "USA",
+  "home": "USM",
+  "awayName": "South Alabama",
+  "homeName": "Southern Miss",
+  "hsp": 4.5,
+  "start": "2026-11-21T21:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "GASO",
+  "home": "TROY",
+  "awayName": "Georgia Southern",
+  "homeName": "Troy",
+  "hsp": 8.5,
+  "start": "2026-11-21T21:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "NIU",
+  "home": "NDSU",
+  "awayName": "Northern Illinois",
+  "homeName": "North Dakota State",
+  "hsp": -25.5,
+  "start": "2026-11-21T21:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "WSU",
+  "home": "TXST",
+  "awayName": "Washington State",
+  "homeName": "Texas State",
+  "hsp": -11.5,
+  "start": "2026-11-21T23:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "MD",
+  "home": "USC",
+  "awayName": "Maryland",
+  "homeName": "USC",
+  "hsp": -17.5,
+  "start": "2026-11-21T23:15:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "VT",
+  "home": "MIA",
+  "awayName": "Virginia Tech",
+  "homeName": "Miami (FL)",
+  "hsp": -20.5,
+  "start": "2026-11-22T00:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "UNLV",
+  "home": "SJSU",
+  "awayName": "UNLV",
+  "homeName": "San Jose State",
+  "hsp": 6.5,
+  "start": "2026-11-22T00:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "ARIZ",
+  "home": "KSU",
+  "awayName": "Arizona",
+  "homeName": "Kansas State",
+  "hsp": 7.5,
+  "start": "2026-11-22T00:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "ARST",
+  "home": "LT",
+  "awayName": "Arkansas State",
+  "homeName": "Louisiana Tech",
+  "hsp": -13.5,
+  "start": "2026-11-22T00:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "PITT",
+  "home": "LOU",
+  "awayName": "Pittsburgh",
+  "homeName": "Louisville",
+  "hsp": -13.5,
+  "start": "2026-11-22T00:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "SMU",
+  "home": "ND",
+  "awayName": "SMU",
+  "homeName": "Notre Dame",
+  "hsp": -20.5,
+  "start": "2026-11-22T00:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "UGA",
+  "home": "SCAR",
+  "awayName": "Georgia",
+  "homeName": "South Carolina",
+  "hsp": 16.5,
+  "start": "2026-11-22T00:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "CSU",
+  "home": "FRES",
+  "awayName": "Colorado State",
+  "homeName": "Fresno State",
+  "hsp": -20.5,
+  "start": "2026-11-22T00:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "UK",
+  "home": "MIZZ",
+  "awayName": "Kentucky",
+  "homeName": "Missouri",
+  "hsp": -5.5,
+  "start": "2026-11-22T00:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "STAN",
+  "home": "CAL",
+  "awayName": "Stanford",
+  "homeName": "California",
+  "hsp": 2.5,
+  "start": "2026-11-22T00:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "UTSA",
+  "home": "UAB",
+  "awayName": "UTSA",
+  "homeName": "UAB",
+  "hsp": 6.5,
+  "start": "2026-11-22T01:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "UTAH",
+  "home": "TCU",
+  "awayName": "Utah",
+  "homeName": "TCU",
+  "hsp": 7.5,
+  "start": "2026-11-22T02:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "SDSU",
+  "home": "BSU",
+  "awayName": "San Diego State",
+  "homeName": "Boise State",
+  "hsp": -17.5,
+  "start": "2026-11-22T02:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "OKST",
+  "home": "ASU",
+  "awayName": "Oklahoma State",
+  "homeName": "Arizona State",
+  "hsp": 3.5,
+  "start": "2026-11-22T03:15:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "USU",
+  "home": "ORST",
+  "awayName": "Utah State",
+  "homeName": "Oregon State",
+  "hsp": -9.5,
+  "start": "2026-11-22T03:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "ncaaf",
+  "away": "HAW",
+  "home": "NEV",
+  "awayName": "Hawai'i",
+  "homeName": "Nevada",
+  "hsp": -3.5,
+  "start": "2026-11-22T03:30:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "NO",
+  "home": "CHI",
+  "awayName": "Saints",
+  "homeName": "Bears",
+  "hsp": -11.5,
+  "start": "2026-11-22T18:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "BAL",
+  "home": "CAR",
+  "awayName": "Ravens",
+  "homeName": "Panthers",
+  "hsp": -1.5,
+  "start": "2026-11-22T18:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "TEN",
+  "home": "DAL",
+  "awayName": "Titans",
+  "homeName": "Cowboys",
+  "hsp": -7.5,
+  "start": "2026-11-22T18:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "PIT",
+  "home": "PHI",
+  "awayName": "Steelers",
+  "homeName": "Eagles",
+  "hsp": 4.5,
+  "start": "2026-11-22T18:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "MIA",
+  "home": "BUF",
+  "awayName": "Dolphins",
+  "homeName": "Bills",
+  "hsp": -16.5,
+  "start": "2026-11-22T18:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "TB",
+  "home": "DET",
+  "awayName": "Buccaneers",
+  "homeName": "Lions",
+  "hsp": -6.5,
+  "start": "2026-11-22T18:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "ARI",
+  "home": "KC",
+  "awayName": "Cardinals",
+  "homeName": "Chiefs",
+  "hsp": -15.5,
+  "start": "2026-11-22T18:00:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "NYJ",
+  "home": "LAC",
+  "awayName": "Jets",
+  "homeName": "Chargers",
+  "hsp": -2.5,
+  "start": "2026-11-22T21:05:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "LV",
+  "home": "DEN",
+  "awayName": "Raiders",
+  "homeName": "Broncos",
+  "hsp": -9.5,
+  "start": "2026-11-22T21:25:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "JAC",
+  "home": "NYG",
+  "awayName": "Jaguars",
+  "homeName": "Giants",
+  "hsp": 5.5,
+  "start": "2026-11-22T21:25:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "MIN",
+  "home": "SF",
+  "awayName": "Vikings",
+  "homeName": "49ers",
+  "hsp": -3.5,
+  "start": "2026-11-23T01:20:00.000Z",
+  "neutral": false
+ },
+ {
+  "lg": "nfl",
+  "away": "CIN",
+  "home": "WAS",
+  "awayName": "Bengals",
+  "homeName": "Commanders",
+  "hsp": 5.5,
+  "start": "2026-11-24T01:15:00.000Z",
+  "neutral": false
+ }
+]
