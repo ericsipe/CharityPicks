@@ -78,6 +78,13 @@
    "label": "Wk 11",
    "title": "NFL Week 11 / CFB Week 12",
    "dates": "Nov 16-23"
+  },
+  {
+   "file": "data/wk12.json",
+   "slate": "slate_01KZ49QZ2RZ10CSEHPW9BRM6KR",
+   "label": "Wk 12",
+   "title": "NFL Week 12 / CFB Week 13",
+   "dates": "Nov 23-30"
   }
  ]
 }
