@@ -30,6 +30,7 @@ h1 { font-size:20px; margin:0 } h2 { font-size:13px; text-transform:uppercase; l
 .score { font-weight:600; font-variant-numeric:tabular-nums }
 .right { text-align:right; font-variant-numeric:tabular-nums }
 .legend span { margin-right:12px }
+.side { color:var(--mut); font-size:13px; margin-top:2px } .side.best { color:var(--fg) } .side.best::after { content:"  ◀ better for you"; color:var(--g); font-weight:600 }
 </style>
 </head>
 <body>
@@ -137,6 +138,7 @@ function render() {
   }).sort((a, b) => b.p - a.p);
   document.getElementById("teams").innerHTML = rows.map((r) => r.html).join("");
 
+  const alive = TEAMS.filter(([, need]) => need.reduce((q, [k, h]) => q * (h ? P[k] : 1 - P[k]), 1) > 0);
   // games: which side helps, and is it winning against the number
   document.getElementById("games").innerHTML = KEYS.map((k) => {
     const g = GAMES[k], s = g.live || { state: "pre" };
@@ -146,9 +148,13 @@ function render() {
     let cls = swing < 1 ? "N" : cv === null ? "Y" : cv ? "G" : "R";
     const status = s.state === "pre" ? (s.detail || "Not started") : s.state === "post" ? "Final" : s.detail;
     const score = s.state === "pre" ? `${g.a} at ${k}` : `${g.a} ${s.as} – ${k} ${s.hs}`;
-    const note = swing < 1 ? "No longer affects your split" :
-      `Root for ${sideName(k, goodHome)}` + (decided ? (q >= 1 ? ": covered" : ": missed") : `: ${pct(q)} to cover`) +
-      ` · worth ${money(swing)}`;
+    const line = (home) => { const ev = home ? evH : evA, best = home === goodHome;
+      const out = alive.filter(([, need]) => need.some(([kk, hh]) => kk === k && !!hh !== home)).map(([n]) => n);
+      const hit = decided && (P[k] >= 1) === home;
+      return `<div class="side ${best ? "best" : ""}">${decided ? (hit ? "✓ " : "✗ ") : ""}<b>${sideName(k, home)}</b> ` +
+        (decided ? "" : `${pct(home ? P[k] : 1 - P[k])} · `) + `you'd expect ${money(ev)}` +
+        (out.length ? ` · knocks out ${out.join(", ")}` : " · knocks out nobody") + `</div>`; };
+    const note = swing < 1 ? "No longer affects your split" : line(goodHome) + line(!goodHome);
     return `<div class="row ${cls}"><div class="dot"></div><div><span class="score">${score}</span> <span class="mut">${status}${s.state === "in" && s.spot ? " · " + s.spot : ""}</span><div class="mut">${note}</div></div>` +
       `<div class="right"><span class="pill ${cls}">${swing < 1 ? "n/a" : decided ? (q >= 1 ? "WON" : "LOST") : cv === null ? "not started" : cv ? "covering" : "not covering"}</span></div></div>`;
   }).join("");
