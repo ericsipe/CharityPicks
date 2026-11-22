@@ -110,10 +110,11 @@ def kalshi_events(year):
 
 def poly_events(first_day):
     out = []
-    for lg, series in (("nfl", "12185"), ("ncaaf", "12756")):
+    # closed=false too: since 11/22/26 a game is priced as soon as its picks lock, before it is played
+    for lg, series, closed in (("nfl", "12185", "true"), ("ncaaf", "12756", "true"), ("nfl", "12185", "false"), ("ncaaf", "12756", "false")):
         offset = 0
         while True:
-            evs = get(f"https://gamma-api.polymarket.com/events?series_id={series}&closed=true&limit=100"
+            evs = get(f"https://gamma-api.polymarket.com/events?series_id={series}&closed={closed}&limit=100"
                       f"&offset={offset}&order=startDate&ascending=false")
             older = False
             for e in evs:
@@ -211,14 +212,18 @@ def poly_cover(g, events):
 
 def main():
     covers = json.loads(COVERS.read_text(encoding="utf-8")) if COVERS.exists() else {}
-    todo = {}
+    todo, now = {}, datetime.datetime.now(datetime.timezone.utc)
     for f in sorted(DATA.glob("wk*.json")):
         week = json.loads(f.read_text(encoding="utf-8"))
         for gid, g in week.get("games", {}).items():
-            if gid in covers or g.get("status") not in ("finished", "finalized") or g.get("hsp") is None:
+            if gid in covers or g.get("hsp") is None:
                 continue
             kickoff = when(g["start"])
             lock = min(kickoff, when(week["lockedAt"]))
+            # Price a game once its picks have locked (kickoff or the Saturday lock, whichever is first),
+            # not only once it is finished: the tracker page needs the lock price for games still to play.
+            if lock > now and g.get("status") not in ("finished", "finalized"):
+                continue
             todo[gid] = dict(g, T=int(lock.timestamp()), day=(kickoff - datetime.timedelta(hours=6)).date())
     if not todo:
         return 0

@@ -142,7 +142,9 @@ function render() {
 
   const alive = TEAMS.filter(([, need]) => need.reduce((q, [k, h]) => q * (h ? P[k] : 1 - P[k]), 1) > 0);
   // games: which side helps, and is it winning against the number
-  document.getElementById("games").innerHTML = KEYS.map((k) => {
+  // live games first, then games still to start, then finals
+  const rankOf = (k) => { const st = (GAMES[k].live || {}).state; return st === "in" ? 0 : st === "post" ? 2 : 1; };
+  document.getElementById("games").innerHTML = KEYS.map((k, i) => [rankOf(k), i, k]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map(([, , k]) => {
     const g = GAMES[k], s = g.live || { state: "pre" };
     const evH = outlook(P, { [k]: 1 }).ev, evA = outlook(P, { [k]: 0 }).ev, swing = Math.abs(evH - evA);
     const goodHome = evH >= evA, q = goodHome ? P[k] : 1 - P[k], decided = P[k] <= 0 || P[k] >= 1;
