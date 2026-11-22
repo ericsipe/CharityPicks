@@ -265,7 +265,7 @@ function render() {
   $("gamesSum").textContent = `${rows.length} games left; ${matter.length} of them move ${me.name}'s expected payout by $3 or more, are live, or are on the card.`;
   $("games").innerHTML = list.map((r) => { const { g, s } = r, q = r.goodHome ? s.p : 1 - s.p, small = !r.mine && r.swing < 3;
     const cls = small ? "N" : s.state === "pre" ? "Y" : q >= .5 ? "G" : "R";
-    const line = (home) => { const ev = home ? r.evHome : r.evAway, out = aliveAll.filter((x) => x.pend.some((p) => p.gid === r.gid && p.home !== home));
+    const line = (home) => { const ev = home ? r.evHome : r.evAway, out = aliveAll.filter((x) => x !== me && x.pend.some((p) => p.gid === r.gid && p.home !== home));
       return `<div class="side ${!small && home === r.goodHome ? "best" : ""}"><b>${esc(sideName(g, home))}</b> ${pct(home ? s.p : 1 - s.p)}` + (ev == null ? "" : ` · you'd expect ${money(ev)}`) +
         ` · knocks out ${out.length === 0 ? "nobody" : out.length <= 4 ? out.map((x) => esc(x.name)).join(", ") : out.length + " entries"}</div>`; };
     const score = s.state === "in" ? `${esc(g.away)} ${s.as} – ${esc(g.home)} ${s.hs}` : `${esc(g.away)} at ${esc(g.home)}`;
