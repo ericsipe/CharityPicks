@@ -11,6 +11,26 @@ INCOMING = DATA / "incoming.json"
 INDEX = DATA / "index.json"
 
 
+def hide_unplayed(week: dict) -> int:
+    """Before the Saturday lock Splash shows other entries' picks only once a game kicks off, but
+    it hands the signed-in entry (The Daddies) its own picks early. The site is public and pool-mates
+    have the link, so drop every pick on a game that had not kicked off when the week was collected,
+    until the lock has passed (Eric 11/22/26: locked until kickoff or 10 AM Saturday, whichever is
+    sooner). Returns the number of picks dropped."""
+    at, lock = week.get("collectedAt", ""), week.get("lockedAt", "")
+    if not at or not lock or at >= lock:
+        return 0
+    games, dropped = week.get("games", {}), 0
+    for e in week.get("entries", []):
+        keep = [p for p in e.get("picks", []) if p[0] in games and games[p[0]].get("start", "9") <= at]
+        dropped += len(e.get("picks", [])) - len(keep)
+        e["picks"] = keep
+    used = {p[0] for e in week.get("entries", []) for p in e["picks"]}
+    for gid in [g for g in games if g not in used]:
+        del games[gid]
+    return dropped
+
+
 def main() -> int:
     # The collector hands off 2.5 s after it returns and the task waits only ~3 s, so give the
     # receiver up to 20 s to write the file before calling the run a failure.
@@ -31,6 +51,9 @@ def main() -> int:
             continue
         file = f"data/{key}.json"
         path = REPO / file
+        hidden = hide_unplayed(week)
+        if hidden:
+            print(f"{key}: {hidden} picks on games not yet kicked off kept back until kickoff or lock")
         if path.exists():
             old = json.loads(path.read_text(encoding="utf-8"))
             # A week's slate id never changes: a different one means the collector grabbed the wrong week.
