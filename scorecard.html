@@ -88,7 +88,9 @@ function homeCoverProb(k) {            // chance the home side covers the pool n
   m += drivePoints(s);
   const per = Math.min(s.period, 4), secs = (s.clock || "0:00").split(":").reduce((a,b)=>a*60+ +b, 0);
   const rem = s.period > 4 ? 0.03 : Math.max(0.005, ((4-per)*900 + secs)/3600);
-  return phi((m + SD*inv(g.p0)*rem) / (SD*Math.sqrt(rem)));
+  // Expected final cover margin = margin so far vs the number, plus what the rest of the game should add:
+  // the favorite is expected to keep outscoring by its spread (-g.h per full game) plus the market's pre-game lean.
+  return phi((m + (SD*inv(g.p0) - g.h)*rem) / (SD*Math.sqrt(rem)));
 }
 // color for a side: before kickoff yellow; once started, green/red by who is covering the pool number right now
 function sideNow(k, home) { const g = GAMES[k], s = g.live;
