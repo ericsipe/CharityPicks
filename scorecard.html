@@ -42,9 +42,9 @@ h1 { font-size:20px; margin:0 } h2 { font-size:13px; text-transform:uppercase; l
     </div>
     <div class="splits" id="splits"></div>
     <div class="mut legend" style="margin-top:10px">
-      <span><span class="pill G">green</span>covering your way right now</span>
+      <span><span class="pill G">green</span>more likely than not going your way</span>
       <span><span class="pill Y">yellow</span>not started</span>
-      <span><span class="pill R">red</span>covering against you right now</span>
+      <span><span class="pill R">red</span>more likely than not going against you</span>
       <span><span class="pill N">gray</span>no longer matters</span>
     </div>
   </div>
@@ -95,7 +95,8 @@ function homeCoverProb(k) {            // chance the home side covers the pool n
 // color for a side: before kickoff yellow; once started, green/red by who is covering the pool number right now
 function sideNow(k, home) { const g = GAMES[k], s = g.live;
   if (!s || s.state === "pre") return null;
-  return (s.hs - s.as + g.h > 0) === !!home; }
+  const ph = homeCoverProb(k);      // by chance to cover, not the raw score: a favorite up 7 on a -9.5 line can still be the likelier side
+  return (home ? ph : 1 - ph) >= 0.5; }
 // Expected points of the current drive, signed for the home team. ytg = yards to the end zone.
 // Rough NFL averages: about +1 at a team's own 25, +2.5 at midfield, +4.6 at the opponent's 20;
 // later downs are worth less, 4th down is a field-goal try in range and a punt otherwise.
@@ -160,7 +161,7 @@ function render() {
         (out.length ? ` · knocks out ${out.join(", ")}` : " · knocks out nobody") + `</div>`; };
     const note = swing < 1 ? "No longer affects your split" : line(goodHome) + line(!goodHome);
     return `<div class="row ${cls}"><div class="dot"></div><div><span class="score">${score}</span> <span class="mut">${status}${s.state === "in" && s.spot ? " · " + s.spot : ""}</span><div class="mut">${note}</div></div>` +
-      `<div class="right"><span class="pill ${cls}">${swing < 1 ? "n/a" : decided ? (q >= 1 ? "WON" : "LOST") : cv === null ? "not started" : cv ? "covering" : "not covering"}</span></div></div>`;
+      `<div class="right"><span class="pill ${cls}">${swing < 1 ? "n/a" : decided ? (q >= 1 ? "WON" : "LOST") : cv === null ? "not started" : pct(q) + (cv ? " likely" : " unlikely")}</span></div></div>`;
   }).join("");
 }
 async function refresh() {
