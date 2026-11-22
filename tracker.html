@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pick 5 Week Tracker</title>
+<style>
+:root { --bg:#f5f6f9; --card:#fff; --fg:#162033; --mut:#5d6880; --line:#dde1ea;
+  --g:#1b8a4b; --gbg:#dff3e7; --y:#9a6b00; --ybg:#fdf0c8; --r:#c0392b; --rbg:#fbe1dd; --n:#6b7487; --nbg:#e9ecf2; }
+@media (prefers-color-scheme: dark) { :root { --bg:#10141d; --card:#1a2030; --fg:#e8ecf5; --mut:#9aa5bd; --line:#2c3447;
+  --g:#5fd08d; --gbg:#173a28; --y:#f1c453; --ybg:#40330f; --r:#ff8a7a; --rbg:#46201c; --n:#9aa5bd; --nbg:#262d3d; color-scheme:dark } }
+* { box-sizing:border-box }
+body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.4 Inter,system-ui,Segoe UI,sans-serif; padding:16px; }
+main { max-width:900px; margin:0 auto; display:grid; gap:16px }
+nav a { color:var(--mut); margin-right:14px; text-decoration:none; font-weight:600 } nav a[aria-current] { color:var(--fg) }
+h1 { font-size:20px; margin:0 } h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--mut); margin:0 0 8px }
+.card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; min-width:0 }
+.top { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between }
+select, button { font:inherit; color:var(--fg); background:var(--card); border:1px solid var(--line); border-radius:8px; padding:6px 10px; max-width:100% }
+button { cursor:pointer }
+.tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px }
+.big { font-size:32px; font-weight:700; font-variant-numeric:tabular-nums }
+.mut { color:var(--mut); font-size:13px }
+.splits { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px }
+.sp { border:1px solid var(--line); border-radius:8px; padding:6px 10px; text-align:center; min-width:74px; font-variant-numeric:tabular-nums }
+.sp b { display:block } .sp.best { border-color:var(--fg) }
+.row { display:grid; grid-template-columns:10px 1fr auto; gap:10px; align-items:center; padding:9px 0; border-top:1px solid var(--line) }
+.row:first-of-type { border-top:0 }
+.dot { width:10px; height:36px; border-radius:4px }
+.G .dot { background:var(--g) } .Y .dot { background:var(--y) } .R .dot { background:var(--r) } .N .dot { background:var(--n) }
+.pill { display:inline-block; border-radius:999px; padding:2px 9px; font-size:12.5px; font-weight:600; white-space:nowrap; margin:2px 4px 2px 0 }
+.pill.G { background:var(--gbg); color:var(--g) } .pill.Y { background:var(--ybg); color:var(--y) }
+.pill.R { background:var(--rbg); color:var(--r) } .pill.N { background:var(--nbg); color:var(--n) }
+.score { font-weight:600; font-variant-numeric:tabular-nums }
+.right { text-align:right; font-variant-numeric:tabular-nums }
+.side { color:var(--mut); font-size:13px; margin-top:2px } .side.best { color:var(--fg) }
+.side.best::after { content:"  ◀ better for you"; color:var(--g); font-weight:600 }
+table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums } th { text-align:right; font-size:12px; color:var(--mut); font-weight:600; padding:4px 6px }
+td { padding:6px; border-top:1px solid var(--line); text-align:right } th:nth-child(2), td:nth-child(2) { text-align:left }
+tr.me td { font-weight:700; background:var(--ybg) }
+.scroll { overflow-x:auto }
+</style>
+</head>
+<body>
+<main>
+  <nav><a href="index.html">Friends</a><a href="everyone.html">Everyone</a><a href="tracker.html" aria-current="page">Tracker</a></nav>
+  <div class="card">
+    <div class="top">
+      <div><h1 id="title">Pick 5 week tracker</h1><div class="mut" id="stamp">Loading…</div></div>
+      <div><label class="mut" for="who">Tracking </label><select id="who"></select></div>
+    </div>
+  </div>
+  <div class="tiles">
+    <div class="card"><h2>This week's 5-0 prize</h2><div class="big" id="wkEv">$–</div><div class="mut" id="wkNote"></div></div>
+    <div class="card"><h2>Season race</h2><div class="big" id="seEv">$–</div><div class="mut" id="seNote"></div></div>
+  </div>
+  <div class="card"><h2 id="cardH">Your card</h2><div id="mine"></div></div>
+  <div class="card"><h2>How many 5-0 cards this week</h2><div class="splits" id="winners"></div><div id="ifIn"></div></div>
+  <div class="card"><h2 id="fieldH">Still perfect</h2><div class="mut" id="fieldSum"></div><div id="field"></div><div id="fieldMore"></div></div>
+  <div class="card"><h2>Games still to finish</h2><div class="mut" id="gamesSum"></div><div id="games"></div><div id="gamesMore"></div></div>
+  <div class="card"><h2>Season race</h2><div class="scroll"><table id="season"></table></div>
+    <div class="mut" style="margin-top:6px">$6,200 to the best season record and $4,100 to second. Future weeks are simulated as coin flips for every entry.</div></div>
+  <div class="mut">Picks and lines come from Splash (other entries' picks appear only once a game kicks off, or at the Saturday 10 AM lock). Scores come from ESPN every 30 seconds.
+    Pre-game chances are the Kalshi and Polymarket price at the pool number when the pick locked; live chances are an estimate from score, clock, possession and field position, not a market quote.
+    Dollar figures come from simulating the rest of the week 40,000 times.</div>
+</main>
+<script>
+/* tracker.html — the whole week of the pool from one entry's point of view.
+   Weekly prize: $4,700 split by every 5-0 card; no 5-0 rolls it into next week. Season: $6,200 / $4,100.
+   Debug: ?wk=11 picks a week; ?asof=2026-11-22T15:30:00Z replays the week as it stood then (no ESPN). */
+const POT = 4700, FIRST = 6200, SECOND = 4100, WEEKS_IN_SEASON = 17, NSIM = 40000;
+const SD = { nfl: 13.5, ncaaf: 16.5 };
+const qs = new URLSearchParams(location.search);
+const ASOF = qs.get("asof") ? new Date(qs.get("asof")) : null;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const money = (n) => "$" + Math.round(n).toLocaleString();
+const pct = (p) => (p > 0 && p < .01 ? "<1" : p < 1 && p > .99 ? ">99" : Math.round(p * 100)) + "%";
+const nameOf = (e) => e.name || e.handle || "?";
+const slotsFor = (wkIndex) => (wkIndex === WEEKS_IN_SEASON - 1 ? 10 : 5);
+const now = () => ASOF || new Date();
+const ct = (iso, o) => new Date(iso).toLocaleString("en-US", { timeZone: "America/Chicago", ...o });
+const phi = (x) => { const t = 1 / (1 + 0.2316419 * Math.abs(x)), d = 0.3989423 * Math.exp(-x * x / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return x > 0 ? 1 - p : p; };
+const inv = (p) => { let lo = -6, hi = 6; for (let i = 0; i < 50; i++) { const m = (lo + hi) / 2; phi(m) < p ? lo = m : hi = m; } return (lo + hi) / 2; };
+
+let ALL = [], W = null, WI = 0, COVERS = {}, ESPN = {}, viewer = null, showAllField = false, showAllGames = false;
+
+/* ---------- ESPN live scores (same matching as app.js, plus possession) ---------- */
+const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/football/";
+const norm = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const NFL_ALIAS = { LA: "LAR", WAS: "WSH", JAC: "JAX" };
+function teamMatches(alias, name, t) {
+  const a = norm(alias), names = [t.abbreviation, t.location, t.shortDisplayName, t.name, t.displayName].map(norm);
+  if (names[0] === a || names[0] === norm(NFL_ALIAS[alias] || "")) return true;
+  const n = norm(name); return n && (names.includes(n) || norm(t.displayName).startsWith(n));
+}
+async function loadEspn() {
+  if (ASOF) return;
+  const feeds = new Set(), nfl = (W.title || "").match(/NFL Week (\d+)/), soon = Date.now() + 20 * 60000;
+  for (const [gid, g] of Object.entries(W.games)) {
+    if (FINAL[gid] != null || new Date(g.start).getTime() > soon) continue;
+    if (g.lg === "nfl" && nfl) feeds.add(`${ESPN_BASE}nfl/scoreboard?seasontype=2&week=${nfl[1]}&dates=${new Date(g.start).getUTCFullYear()}`);
+    if (g.lg === "ncaaf") { const d = new Date(new Date(g.start).toLocaleString("en-US", { timeZone: "America/Chicago" }));
+      feeds.add(`${ESPN_BASE}college-football/scoreboard?groups=80&limit=400&dates=${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`); }
+  }
+  if (!feeds.size) return;
+  const events = [];
+  for (const r of await Promise.allSettled([...feeds].map((u) => fetch(u, { cache: "no-store" }).then((x) => x.json()))))
+    if (r.status === "fulfilled") for (const ev of r.value.events || []) events.push(ev);
+  for (const [gid, g] of Object.entries(W.games)) {
+    if (FINAL[gid] != null) continue;
+    for (const ev of events) {
+      const c = ev.competitions[0], h = c.competitors.find((x) => x.homeAway === "home"), a = c.competitors.find((x) => x.homeAway === "away");
+      if (!h || !a || !teamMatches(g.home, g.homeName, h.team) || !teamMatches(g.away, g.awayName, a.team)) continue;
+      const sit = c.situation || {}, poss = sit.possession === h.id ? "home" : sit.possession === a.id ? "away" : null;
+      ESPN[gid] = { state: ev.status.type.state, hs: +h.score || 0, as: +a.score || 0, period: ev.status.period, clock: ev.status.displayClock,
+        detail: ev.status.type.shortDetail, poss, down: sit.down, dist: sit.distance, yl: sit.yardLine,
+        spot: poss && sit.downDistanceText ? (poss === "home" ? g.home : g.away) + " ball, " + sit.downDistanceText : "" };
+      break;
+    }
+  }
+}
+
+/* ---------- where each game stands ---------- */
+let FINAL = {};   // gameId -> true/false: did the HOME side cover (decided games only)
+function findFinals() {
+  FINAL = {};
+  const t = now().toISOString();
+  for (const e of W.entries) for (const p of e.picks) {
+    const g = W.games[p[0]];
+    if (!g || FINAL[p[0]] != null || (p[3] !== "won" && p[3] !== "lost") || (ASOF && g.start > t)) continue;
+    FINAL[p[0]] = (p[1] === g.home) === (p[3] === "won");
+  }
+}
+function drivePoints(s) {      // expected points of the current drive, signed for the home team
+  if (!s.poss || !(s.down >= 1) || s.yl == null) return 0;
+  const ytg = s.poss === "home" ? 100 - s.yl : s.yl, far = Math.max(0, (s.dist || 10) - 5) * 0.05;
+  let ep = 6 - 0.068 * ytg;
+  if (s.down === 2) ep -= 0.3 + far; else if (s.down === 3) ep -= 0.9 + far * 2;
+  else if (s.down === 4) ep = ytg <= 38 ? 3 * Math.min(.98, 1.25 - ytg / 60) : -0.5;
+  return s.poss === "home" ? ep : -ep;
+}
+function gameNow(gid) {        // { state: pre|in|post, p: chance the home side covers the pool number, ... }
+  const g = W.games[gid], p0 = COVERS[gid] ?? 0.5, live = ESPN[gid];
+  if (FINAL[gid] != null) return { state: "post", p: FINAL[gid] ? 1 : 0, hs: live ? live.hs : g.hs, as: live ? live.as : g.as, detail: "Final" };
+  if (!live || live.state === "pre") return { state: "pre", p: p0, detail: ct(g.start, { weekday: "short", hour: "numeric", minute: "2-digit" }) + " Central" };
+  const m0 = live.hs - live.as + g.hsp;
+  if (live.state === "post") return { ...live, state: "post", p: m0 > 0 ? 1 : 0, detail: "Final" };
+  const sd = SD[g.lg] || 15, per = Math.min(live.period, 4), secs = (live.clock || "0:00").split(":").reduce((a, b) => a * 60 + +b, 0);
+  const rem = live.period > 4 ? 0.03 : Math.max(0.005, ((4 - per) * 900 + secs) / 3600);
+  return { ...live, p: phi((m0 + drivePoints(live) + (sd * inv(p0) - g.hsp) * rem) / (sd * Math.sqrt(rem))) };
+}
+
+/* ---------- the simulation ---------- */
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function simulate() {
+  const slots = slotsFor(WI), locked = now() >= new Date(W.lockedAt), tISO = now().toISOString();
+  const G = {}; for (const gid of Object.keys(W.games)) G[gid] = gameNow(gid);
+  const open = Object.keys(G).filter((k) => G[k].state !== "post"), oi = Object.fromEntries(open.map((k, i) => [k, i]));
+  // pot: doubled for each week in a row before this one that nobody swept
+  let roll = 0; for (let i = WI - 1; i >= 0; i--) { if (ALL[i].entries.some((e) => e.pts >= slotsFor(i))) break; roll++; }
+  const pot = POT * (1 + roll);
+  const prev = {}; for (let i = 0; i < WI; i++) for (const e of ALL[i].entries) prev[e.id] = (prev[e.id] || 0) + (e.pts || 0);
+  let future = 0; for (let i = WI + 1; i < WEEKS_IN_SEASON; i++) future += slotsFor(i);
+  const E = W.entries.map((e) => {
+    const picks = e.picks.filter((p) => W.games[p[0]] && !(ASOF && !locked && W.games[p[0]].start > tISO))
+      .map((p) => ({ gid: p[0], home: p[1] === W.games[p[0]].home, team: p[1], sp: p[2] }));
+    let won = 0, lost = 0; const pend = [];
+    for (const p of picks) { const s = G[p.gid]; if (s.state === "post") ((s.p === 1) === p.home ? won++ : lost++); else pend.push(p); }
+    const hidden = locked ? 0 : Math.max(0, slots - picks.length), short = locked ? Math.max(0, slots - picks.length) : 0;
+    return { e, id: e.id, name: nameOf(e), picks, pend, won, lost, hidden, short, alive: lost === 0 && short === 0, base: prev[e.id] || 0,
+      perfect: 0, first: 0, top2: 0, seEv: 0, pi: pend.map((p) => oi[p.gid]), ph: pend.map((p) => p.home ? 1 : 0) };
+  });
+  const v = E.findIndex((x) => x.id === viewer), n = E.length, R = rng(20261122), out = new Uint8Array(open.length), tot = new Int16Array(n), perf = new Uint8Array(n);
+  const P = open.map((k) => G[k].p), winners = {}, withMe = {};
+  const gv = open.map(() => [0, 0, 0, 0]);       // per open game: value sum and count, away covers / home covers
+  let wkEv = 0, mePerfect = 0, rollover = 0;
+  const sdF = Math.sqrt(future) / 2;
+  for (let s = 0; s < NSIM; s++) {
+    for (let i = 0; i < open.length; i++) out[i] = R() < P[i] ? 1 : 0;
+    let nPerf = 0;
+    for (let i = 0; i < n; i++) {
+      const x = E[i]; let pts = x.won, ok = x.alive;
+      for (let j = 0; j < x.pi.length; j++) { if (out[x.pi[j]] === x.ph[j]) pts++; else ok = false; }
+      for (let j = 0; j < x.hidden; j++) { if (R() < 0.5) pts++; else ok = false; }
+      perf[i] = ok ? 1 : 0; if (ok) { nPerf++; x.perfect++; }
+      let f = 0; if (future) { const z = Math.sqrt(-2 * Math.log(R() || 1e-9)) * Math.cos(6.2831853 * R()); f = Math.max(0, Math.min(future, Math.round(future / 2 + sdF * z))); }
+      tot[i] = x.base + pts + f;
+    }
+    winners[nPerf] = (winners[nPerf] || 0) + 1;
+    let val = 0;
+    if (nPerf === 0) { rollover++; val = pot / n; }
+    else if (v >= 0 && perf[v]) { val = pot / nPerf; mePerfect++; withMe[nPerf] = (withMe[nPerf] || 0) + 1; }
+    wkEv += v >= 0 && perf[v] ? pot / nPerf : 0;
+    for (let i = 0; i < open.length; i++) { const a = gv[i], o = out[i] * 2; a[o] += val; a[o + 1]++; }
+    // season: best total takes FIRST, next takes SECOND, ties split what the tied places pay
+    let mx = -1, mx2 = -1; for (let i = 0; i < n; i++) { const t = tot[i]; if (t > mx) { mx2 = mx; mx = t; } else if (t < mx && t > mx2) mx2 = t; }
+    let c1 = 0, c2 = 0; for (let i = 0; i < n; i++) { if (tot[i] === mx) c1++; else if (tot[i] === mx2) c2++; }
+    const pay1 = c1 > 1 ? (FIRST + SECOND) / c1 : FIRST, pay2 = c1 > 1 ? 0 : SECOND / (c2 || 1);
+    for (let i = 0; i < n; i++) { if (tot[i] === mx) { E[i].first++; E[i].top2++; E[i].seEv += pay1; } else if (c1 === 1 && tot[i] === mx2) { E[i].top2++; E[i].seEv += pay2; } }
+  }
+  for (const x of E) { x.perfect /= NSIM; x.first /= NSIM; x.top2 /= NSIM; x.seEv /= NSIM; }
+  const games = open.map((gid, i) => { const a = gv[i]; return { gid, s: G[gid], evAway: a[1] ? a[0] / a[1] : null, evHome: a[3] ? a[2] / a[3] : null }; });
+  return { G, E, me: v >= 0 ? E[v] : null, pot, roll, slots, locked, wkEv: wkEv / NSIM, mePerfect: mePerfect / NSIM, rollover: rollover / NSIM, winners, withMe, games, future };
+}
+
+/* ---------- drawing ---------- */
+const sideName = (g, home) => { const sp = home ? g.hsp : -g.hsp; return (home ? g.home : g.away) + " " + (sp > 0 ? "+" : "−") + Math.abs(sp); };
+function chip(S, p, good) {      // one pick as a chip; good = true when the pick covering helps the viewer (their own pick)
+  const g = W.games[p.gid], s = S.G[p.gid], q = p.home ? s.p : 1 - s.p;
+  const hit = s.state === "post" ? q === 1 : null;
+  const cls = s.state === "pre" ? "Y" : (q >= 0.5) === good ? "G" : "R";
+  return `<span class="pill ${cls}" title="${esc(g.away)} at ${esc(g.home)} · ${esc(s.detail || "")}">${esc(sideName(g, p.home))}${hit === null ? " " + pct(q) : hit ? " ✓" : " ✗"}</span>`;
+}
+function render() {
+  const S = simulate(), me = S.me, slots = S.slots;
+  $("title").textContent = `${W.title || W.label}: week tracker`;
+  $("stamp").textContent = (ASOF ? "Replay as of " + ct(ASOF.toISOString(), { weekday: "short", hour: "numeric", minute: "2-digit" }) : "Updated " + ct(new Date().toISOString(), { hour: "numeric", minute: "2-digit", second: "2-digit" })) +
+    " Central · " + (S.locked ? "picks locked" : "before the Saturday lock: other entries' unplayed picks are hidden");
+  if (!me) { $("wkEv").textContent = "$–"; return; }
+  // tiles
+  $("wkEv").textContent = money(S.wkEv);
+  const potTxt = `pot ${money(S.pot)}${S.roll ? " (rolled over)" : ""}`;
+  $("wkNote").innerHTML = !me.alive ? `${esc(me.name)} is out of this week's prize (${me.lost ? "a pick lost" : "short of " + slots + " picks"}). ${potTxt}; ${pct(S.rollover)} chance nobody sweeps and it rolls over.`
+    : me.pend.length + me.hidden === 0 ? `${esc(me.name)} is ${slots}-0. Expected share of the ${potTxt}.`
+    : `${pct(S.mePerfect)} chance to finish ${slots}-0 (now ${me.won}-0, ${me.pend.length + me.hidden} to go). Expected share of the ${potTxt}.`;
+  const rank = 1 + S.E.filter((x) => x.base + x.won > me.base + me.won).length, lead = Math.max(...S.E.map((x) => x.base + x.won));
+  $("seEv").textContent = money(me.seEv);
+  $("seNote").textContent = `${me.base + me.won} points, ${rank === 1 ? "in first" : "place " + rank + ", leader has " + lead}. ${pct(me.first)} to finish first, ${pct(me.top2)} top two. ${S.future + (slots - me.won - me.lost)} points still to play.`;
+  // the viewer's card
+  $("cardH").textContent = `${me.name}'s card`;
+  $("mine").innerHTML = me.picks.map((p) => chip(S, p, true)).join("") +
+    (me.hidden ? `<span class="pill N">${me.hidden} pick${me.hidden > 1 ? "s" : ""} not shown until kickoff or lock</span>` : "") +
+    (me.short ? `<span class="pill R">${me.short} pick${me.short > 1 ? "s" : ""} not made</span>` : "") || `<span class="mut">No picks in yet.</span>`;
+  // how many winners
+  const ks = Object.keys(S.winners).map(Number).sort((a, b) => a - b), topK = Math.max(...Object.values(S.winners));
+  const group = {}; for (const k of ks) { const key = k >= 8 ? 8 : k; group[key] = (group[key] || 0) + S.winners[k]; }
+  $("winners").innerHTML = Object.keys(group).map(Number).filter((k) => group[k] / NSIM >= .005).map((k) =>
+    `<div class="sp ${group[k] === topK ? "best" : ""}"><b>${k === 0 ? "Nobody" : k >= 8 ? "8 or more" : k}</b>${k === 0 ? "rolls over" : money(S.pot / k) + " each"}<div class="mut">${pct(group[k] / NSIM)}</div></div>`).join("");
+  const wm = Object.keys(S.withMe).map(Number).sort((a, b) => a - b), wmN = wm.reduce((a, k) => a + S.withMe[k], 0);
+  $("ifIn").innerHTML = me.alive && wmN ? `<div class="mut" style="margin-top:10px">If ${esc(me.name)} ${me.pend.length + me.hidden ? "gets there" : "holds"}: ` +
+    wm.filter((k) => S.withMe[k] / wmN >= .01).map((k) => `${k === 1 ? "alone" : k + "-way"} ${money(S.pot / k)} (${pct(S.withMe[k] / wmN)})`).join(" · ") + `</div>` : "";
+  // the field
+  const alive = S.E.filter((x) => x.alive && x !== me).sort((a, b) => b.perfect - a.perfect);
+  const byRec = {}; for (const x of S.E.filter((x) => x.alive)) byRec[x.won] = (byRec[x.won] || 0) + 1;
+  $("fieldH").textContent = `Still perfect: ${alive.length + (me.alive ? 1 : 0)} of ${S.E.length} entries`;
+  $("fieldSum").textContent = Object.keys(byRec).map(Number).sort((a, b) => b - a).map((k) => `${byRec[k]} at ${k}-0`).join(" · ");
+  const shown = showAllField ? alive : alive.slice(0, 12);
+  $("field").innerHTML = shown.map((x) => { const done = x.pend.length + x.hidden === 0;
+    return `<div class="row ${done ? "R" : x.perfect >= .5 ? "R" : "Y"}"><div class="dot"></div><div><b>${esc(x.name)}</b> <span class="mut">${x.won}-0</span><div>` +
+      x.picks.map((p) => chip(S, p, false)).join("") + (x.hidden ? `<span class="pill N">${x.hidden} hidden</span>` : "") +
+      `</div></div><div class="right"><span class="pill ${done || x.perfect >= .5 ? "R" : "Y"}">${done ? "IN: " + slots + "-0" : pct(x.perfect) + " to sweep"}</span></div></div>`; }).join("");
+  $("fieldMore").innerHTML = alive.length > 12 ? `<button id="fm">${showAllField ? "Show fewer" : "Show all " + alive.length}</button>` : "";
+  if ($("fm")) $("fm").onclick = () => { showAllField = !showAllField; render(); };
+  // games
+  const aliveAll = S.E.filter((x) => x.alive);
+  const rows = S.games.map((r) => { const g = W.games[r.gid];
+    const swing = r.evHome == null || r.evAway == null ? 0 : Math.abs(r.evHome - r.evAway), goodHome = (r.evHome ?? 0) >= (r.evAway ?? 0);
+    const mine = me.pend.find((p) => p.gid === r.gid);
+    return { ...r, g, swing, goodHome: mine ? mine.home : goodHome, mine }; })
+    .sort((a, b) => (a.s.state === "in" ? 0 : 1) - (b.s.state === "in" ? 0 : 1) || (b.mine ? 1 : 0) - (a.mine ? 1 : 0) || b.swing - a.swing);
+  const matter = rows.filter((r) => r.mine || r.swing >= 3 || r.s.state === "in"), list = showAllGames ? rows : matter.slice(0, 16);
+  $("gamesSum").textContent = `${rows.length} games left; ${matter.length} of them move ${me.name}'s expected payout by $3 or more, are live, or are on the card.`;
+  $("games").innerHTML = list.map((r) => { const { g, s } = r, q = r.goodHome ? s.p : 1 - s.p, small = !r.mine && r.swing < 3;
+    const cls = small ? "N" : s.state === "pre" ? "Y" : q >= .5 ? "G" : "R";
+    const line = (home) => { const ev = home ? r.evHome : r.evAway, out = aliveAll.filter((x) => x.pend.some((p) => p.gid === r.gid && p.home !== home));
+      return `<div class="side ${!small && home === r.goodHome ? "best" : ""}"><b>${esc(sideName(g, home))}</b> ${pct(home ? s.p : 1 - s.p)}` + (ev == null ? "" : ` · you'd expect ${money(ev)}`) +
+        ` · knocks out ${out.length === 0 ? "nobody" : out.length <= 4 ? out.map((x) => esc(x.name)).join(", ") : out.length + " entries"}</div>`; };
+    const score = s.state === "in" ? `${esc(g.away)} ${s.as} – ${esc(g.home)} ${s.hs}` : `${esc(g.away)} at ${esc(g.home)}`;
+    return `<div class="row ${cls}"><div class="dot"></div><div><span class="score">${score}</span> <span class="mut">${esc(s.detail || "")}${s.state === "in" && s.spot ? " · " + esc(s.spot) : ""}${r.mine ? " · on the card" : ""}</span>` +
+      line(r.goodHome) + line(!r.goodHome) + `</div><div class="right"><span class="pill ${cls}">${small ? "little effect" : s.state === "pre" ? "not started" : pct(q) + (q >= .5 ? " likely" : " unlikely")}</span></div></div>`; }).join("") ||
+    `<div class="mut">Every game this week is final.</div>`;
+  $("gamesMore").innerHTML = rows.length > list.length || showAllGames ? `<button id="gm">${showAllGames ? "Show only the games that matter" : "Show all " + rows.length + " games"}</button>` : "";
+  if ($("gm")) $("gm").onclick = () => { showAllGames = !showAllGames; render(); };
+  // season
+  const top = [...S.E].sort((a, b) => b.first - a.first || b.top2 - a.top2).slice(0, 8); if (!top.includes(me)) top.push(me);
+  const pts = (x) => x.base + x.won, rk = (x) => 1 + S.E.filter((y) => pts(y) > pts(x)).length;
+  $("season").innerHTML = `<tr><th>Now</th><th>Entry</th><th>Points</th><th>Wins it</th><th>Top two</th><th>Expected</th></tr>` +
+    top.map((x) => `<tr class="${x === me ? "me" : ""}"><td>${rk(x)}</td><td>${esc(x.name)}</td><td>${pts(x)}</td><td>${pct(x.first)}</td><td>${pct(x.top2)}</td><td>${money(x.seEv)}</td></tr>`).join("");
+}
+
+/* ---------- loading ---------- */
+async function loadData() {
+  const j = (u) => fetch(u, { cache: "no-store" }).then((r) => r.json());
+  const index = await j("data/index.json");
+  ALL = await Promise.all(index.weeks.map((w) => j(w.file)));
+  COVERS = await j("data/covers.json").catch(() => ({}));
+  const want = +qs.get("wk");
+  WI = want ? want - 1 : Math.max(0, ALL.map((w) => w.entries.some((e) => e.picks.length)).lastIndexOf(true));
+  W = ALL[WI];
+  findFinals();
+  const sel = $("who"), saved = (() => { try { return localStorage.getItem("tracker.who"); } catch { return null; } })();
+  const list = [...W.entries].sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
+  if (!viewer) viewer = (list.find((e) => e.id === saved) || list.find((e) => e.name === "The Daddies") || list[0]).id;
+  sel.innerHTML = list.map((e) => `<option value="${esc(e.id)}"${e.id === viewer ? " selected" : ""}>${esc(nameOf(e))}</option>`).join("");
+  sel.onchange = () => { viewer = sel.value; try { localStorage.setItem("tracker.who", viewer); } catch {} render(); };
+}
+async function tick() { try { await loadEspn(); } catch {} render(); }
+(async () => {
+  try { await loadData(); } catch (e) { $("stamp").textContent = "Could not load the pool data: " + e.message; return; }
+  await tick();
+  if (!ASOF) { setInterval(tick, 30000); setInterval(async () => { try { await loadData(); } catch {} }, 300000); }
+})();
+</script>
+</body>
+</html>
