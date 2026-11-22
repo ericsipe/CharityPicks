@@ -257,7 +257,8 @@ function render() {
   // games
   const aliveAll = S.E.filter((x) => x.alive);
   const rows = S.games.map((r) => { const g = W.games[r.gid];
-    const swing = r.evHome == null || r.evAway == null ? 0 : Math.abs(r.evHome - r.evAway), goodHome = (r.evHome ?? 0) >= (r.evAway ?? 0);
+    const held = aliveAll.some((x) => x.pend.some((p) => p.gid === r.gid));      // nobody alive holds it: any gap is simulation noise
+    const swing = !held || r.evHome == null || r.evAway == null ? 0 : Math.abs(r.evHome - r.evAway), goodHome = (r.evHome ?? 0) >= (r.evAway ?? 0);
     const mine = me.pend.find((p) => p.gid === r.gid);
     return { ...r, g, swing, goodHome: mine ? mine.home : goodHome, mine }; })
     .sort((a, b) => (a.s.state === "in" ? 0 : 1) - (b.s.state === "in" ? 0 : 1) || (b.mine ? 1 : 0) - (a.mine ? 1 : 0) || b.swing - a.swing);
