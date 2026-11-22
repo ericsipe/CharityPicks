@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wk 11 Split Scorecard</title>
+<style>
+:root { --bg:#f5f6f9; --card:#fff; --fg:#162033; --mut:#5d6880; --line:#dde1ea;
+  --g:#1b8a4b; --gbg:#dff3e7; --y:#9a6b00; --ybg:#fdf0c8; --r:#c0392b; --rbg:#fbe1dd; --n:#6b7487; --nbg:#e9ecf2; }
+@media (prefers-color-scheme: dark) { :root { --bg:#10141d; --card:#1a2030; --fg:#e8ecf5; --mut:#9aa5bd; --line:#2c3447;
+  --g:#5fd08d; --gbg:#173a28; --y:#f1c453; --ybg:#40330f; --r:#ff8a7a; --rbg:#46201c; --n:#9aa5bd; --nbg:#262d3d; color-scheme:dark } }
+* { box-sizing:border-box }
+body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.4 Inter,system-ui,Segoe UI,sans-serif; padding:16px; }
+main { max-width:860px; margin:0 auto; display:grid; gap:16px }
+h1 { font-size:20px; margin:0 } h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--mut); margin:0 0 8px }
+.card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px }
+.top { display:flex; flex-wrap:wrap; gap:16px; align-items:baseline; justify-content:space-between }
+.ev { font-size:38px; font-weight:700; font-variant-numeric:tabular-nums }
+.mut { color:var(--mut); font-size:13px }
+.splits { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px }
+.sp { border:1px solid var(--line); border-radius:8px; padding:6px 10px; text-align:center; min-width:74px; font-variant-numeric:tabular-nums }
+.sp b { display:block } .sp.best { border-color:var(--fg); }
+.row { display:grid; grid-template-columns:10px 1fr auto; gap:10px; align-items:center; padding:9px 0; border-top:1px solid var(--line) }
+.row:first-of-type { border-top:0 }
+.dot { width:10px; height:36px; border-radius:4px }
+.G .dot { background:var(--g) } .Y .dot { background:var(--y) } .R .dot { background:var(--r) } .N .dot { background:var(--n) }
+.pill { display:inline-block; border-radius:999px; padding:2px 9px; font-size:12.5px; font-weight:600; white-space:nowrap; margin:2px 4px 2px 0 }
+.pill.G { background:var(--gbg); color:var(--g) } .pill.Y { background:var(--ybg); color:var(--y) }
+.pill.R { background:var(--rbg); color:var(--r) } .pill.N { background:var(--nbg); color:var(--n) }
+.score { font-weight:600; font-variant-numeric:tabular-nums }
+.right { text-align:right; font-variant-numeric:tabular-nums }
+.legend span { margin-right:12px }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <div class="top">
+      <div><h1>Wk 11 split scorecard: The Daddies 5-0</h1><div class="mut" id="stamp">Loading scores…</div></div>
+      <div class="right"><div class="ev" id="ev">$–</div><div class="mut">expected share of $4,700</div></div>
+    </div>
+    <div class="splits" id="splits"></div>
+    <div class="mut legend" style="margin-top:10px">
+      <span><span class="pill G">green</span>going your way</span>
+      <span><span class="pill Y">yellow</span>undecided</span>
+      <span><span class="pill R">red</span>going against you</span>
+      <span><span class="pill N">gray</span>no longer matters</span>
+    </div>
+  </div>
+  <div class="card"><h2>Who can still join you and ltlbdy</h2><div id="teams"></div></div>
+  <div class="card"><h2>Games</h2><div id="games"></div></div>
+  <div class="mut">Scores from ESPN, refreshed every 30 seconds. Live chances are a simple score-and-clock estimate anchored to the pre-game market price, not a market quote. Final results are exact.</div>
+</main>
+<script>
+const POT = 4700, SD = 13.5;
+// keyed by ESPN home abbreviation: away, pool home spread, pre-game market chance the home side covers
+const GAMES = {
+  DAL:{a:"TEN",h:-7.5,p0:.49}, CHI:{a:"NO",h:-11.5,p0:.502}, DET:{a:"TB",h:-6.5,p0:.415}, KC:{a:"ARI",h:-15.5,p0:.49},
+  PHI:{a:"PIT",h:4.5,p0:.545}, CAR:{a:"BAL",h:-2.5,p0:.515}, LAC:{a:"NYJ",h:-3.5,p0:.459}, DEN:{a:"LV",h:-9.5,p0:.55},
+  NYG:{a:"JAX",h:5.5,p0:.49}, SF:{a:"MIN",h:-3.5,p0:.485}, WSH:{a:"CIN",h:5.5,p0:.465} };
+// each contender's open picks: [home key, true if they hold the home side]
+const TEAMS = [
+  ["BoomerSooner27",[["SF",1]]],
+  ["Boxer Moms",[["DAL",0],["DET",0]]],
+  ["McWhacker",[["CHI",0],["DEN",1]]],
+  ["4 Pros and Diego",[["LAC",1],["WSH",1]]],
+  ["MPE Consortium",[["DET",1],["NYG",0]]],
+  ["Fortunato Cinque",[["KC",1],["LAC",1],["WSH",0]]],
+  ["Breck-317",[["CHI",1],["DET",1],["NYG",0]]],
+  ["Team Arm Punts",[["SF",1],["CAR",1],["DET",0],["KC",1]]],
+  ["Call Rafi for locks",[["CHI",1],["KC",1],["NYG",0],["WSH",1]]],
+  ["Head_Ball_Coach",[["PHI",0],["NYG",0],["WSH",0],["DET",1]]],
+  ["Purple Reign",[["WSH",0],["SF",0],["DET",1],["DAL",1],["CHI",1]]] ];
+const KEYS = Object.keys(GAMES);
+const phi = (x) => { const t = 1/(1+0.2316419*Math.abs(x)), d = 0.3989423*Math.exp(-x*x/2);
+  const p = d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274)))); return x>0 ? 1-p : p; };
+const inv = (p) => { let lo=-6, hi=6; for (let i=0;i<50;i++){ const m=(lo+hi)/2; phi(m)<p ? lo=m : hi=m; } return (lo+hi)/2; };
+const money = (n) => "$" + Math.round(n).toLocaleString();
+const pct = (p) => (p>0 && p<.01 ? "<1" : p<1 && p>.99 ? ">99" : Math.round(p*100)) + "%";
+const sideName = (k, home) => { const g = GAMES[k], sp = home ? g.h : -g.h; return (home ? k : g.a) + " " + (sp>0?"+":"−") + Math.abs(sp); };
+
+function homeCoverProb(k) {            // chance the home side covers the pool number right now
+  const g = GAMES[k], s = g.live;
+  if (!s || s.state === "pre") return g.p0;
+  const m = s.hs - s.as + g.h;
+  if (s.state === "post") return m > 0 ? 1 : 0;
+  const per = Math.min(s.period, 4), secs = (s.clock || "0:00").split(":").reduce((a,b)=>a*60+ +b, 0);
+  const rem = s.period > 4 ? 0.03 : Math.max(0.005, ((4-per)*900 + secs)/3600);
+  return phi((m + SD*inv(g.p0)*rem) / (SD*Math.sqrt(rem)));
+}
+function outlook(P, fix) {             // expected share and split odds, optionally forcing some results
+  const free = KEYS.filter((k) => !(fix && k in fix) && P[k] > 0 && P[k] < 1), dist = {};
+  let ev = 0;
+  for (let b = 0; b < (1 << free.length); b++) {
+    const o = {}; let pr = 1;
+    KEYS.forEach((k) => { o[k] = fix && k in fix ? fix[k] : P[k] >= 1 ? 1 : 0; });
+    free.forEach((k, i) => { o[k] = (b >> i) & 1; pr *= o[k] ? P[k] : 1 - P[k]; });
+    const n = 2 + TEAMS.filter(([, need]) => need.every(([k, h]) => o[k] === h)).length;
+    dist[n] = (dist[n] || 0) + pr; ev += pr * POT / n;
+  }
+  return { ev, dist };
+}
+function render() {
+  const P = {}; KEYS.forEach((k) => P[k] = homeCoverProb(k));
+  const now = outlook(P);
+  document.getElementById("ev").textContent = money(now.ev);
+  const top = Math.max(...Object.values(now.dist));
+  document.getElementById("splits").innerHTML = Object.keys(now.dist).sort((a,b)=>a-b).filter((n) => now.dist[n] >= .005)
+    .map((n) => `<div class="sp ${now.dist[n]===top?"best":""}"><b>${n}-way</b>${money(POT/n)}<div class="mut">${pct(now.dist[n])}</div></div>`).join("");
+
+  // contenders: green = out, red = in, yellow = still alive
+  const rows = TEAMS.map(([name, need]) => {
+    const p = need.reduce((a, [k, h]) => a * (h ? P[k] : 1 - P[k]), 1);
+    const cls = p <= 0 ? "G" : p >= 1 ? "R" : p >= .5 ? "R" : "Y";
+    const picks = need.map(([k, h]) => { const q = h ? P[k] : 1 - P[k];
+      return `<span class="pill ${q>=1?"R":q<=0?"G":q>=.65?"R":q<=.35?"G":"Y"}">${sideName(k,h)}${q>0&&q<1?" "+pct(q):q>=1?" ✓":" ✗"}</span>`; }).join("");
+    const word = p <= 0 ? "OUT" : p >= 1 ? "IN: 5-0" : pct(p) + " to join";
+    return { p, html: `<div class="row ${cls}"><div class="dot"></div><div><b>${name}</b><div>${picks}</div></div><div class="right"><span class="pill ${cls}">${word}</span></div></div>` };
+  }).sort((a, b) => b.p - a.p);
+  document.getElementById("teams").innerHTML = rows.map((r) => r.html).join("");
+
+  // games: which side helps, and is it winning against the number
+  document.getElementById("games").innerHTML = KEYS.map((k) => {
+    const g = GAMES[k], s = g.live || { state: "pre" };
+    const evH = outlook(P, { [k]: 1 }).ev, evA = outlook(P, { [k]: 0 }).ev, swing = Math.abs(evH - evA);
+    const goodHome = evH >= evA, q = goodHome ? P[k] : 1 - P[k], decided = P[k] <= 0 || P[k] >= 1;
+    let cls = swing < 1 ? "N" : q >= .65 ? "G" : q <= .35 ? "R" : "Y";
+    const status = s.state === "pre" ? (s.detail || "Not started") : s.state === "post" ? "Final" : s.detail;
+    const score = s.state === "pre" ? `${g.a} at ${k}` : `${g.a} ${s.as} – ${k} ${s.hs}`;
+    const note = swing < 1 ? "No longer affects your split" :
+      `Root for ${sideName(k, goodHome)}` + (decided ? (q >= 1 ? ": covered" : ": missed") : `: ${pct(q)} to cover`) +
+      ` · worth ${money(swing)}`;
+    return `<div class="row ${cls}"><div class="dot"></div><div><span class="score">${score}</span> <span class="mut">${status}</span><div class="mut">${note}</div></div>` +
+      `<div class="right"><span class="pill ${cls}">${swing < 1 ? "n/a" : decided ? (q >= 1 ? "WON" : "LOST") : q >= .65 ? "good" : q <= .35 ? "bad" : "open"}</span></div></div>`;
+  }).join("");
+}
+async function refresh() {
+  try {
+    const d = await (await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=11&_=" + Date.now())).json();
+    for (const e of d.events) {
+      const c = e.competitions[0], h = c.competitors.find((x) => x.homeAway === "home"), a = c.competitors.find((x) => x.homeAway === "away");
+      const g = GAMES[h.team.abbreviation]; if (!g) continue;
+      const kick = new Date(e.date).toLocaleString("en-US", { timeZone: "America/Chicago", weekday: "short", hour: "numeric", minute: "2-digit" });
+      g.live = { state: e.status.type.state, hs: +h.score, as: +a.score, period: e.status.period, clock: e.status.displayClock,
+        detail: e.status.type.state === "pre" ? kick + " Central" : e.status.type.shortDetail };
+    }
+    document.getElementById("stamp").textContent = "Updated " + new Date().toLocaleTimeString("en-US", { timeZone: "America/Chicago" }) + " Central";
+  } catch (err) {
+    document.getElementById("stamp").textContent = "Could not reach ESPN; showing the last scores. Retrying…";
+  }
+  render();
+}
+render(); refresh(); setInterval(refresh, 30000);
+</script>
+</body>
+</html>
