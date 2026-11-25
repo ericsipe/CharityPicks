@@ -127,9 +127,10 @@ async function collectSlate(slate, meta) {
   const ps = await get(`${API}/team-pickem/picksheets?contestId=${CONTEST}&slateId=${slate}`);
   if (lb.nextCursor) throw new Error("More than 100 entries; add cursor paging.");
   const games = {};
+  // A game whose team is still TBD (11/24/26: the next week's board) has home or away null.
   for (const g of ps.data.games) {
-    games[g.gameId] = { lg: g.league, start: g.startsAt, status: g.status, away: g.away.alias, home: g.home.alias,
-      awayName: g.away.name, homeName: g.home.name, as: g.away.score, hs: g.home.score, hsp: g.home.spread,
+    games[g.gameId] = { lg: g.league, start: g.startsAt, status: g.status, away: g.away?.alias ?? null, home: g.home?.alias ?? null,
+      awayName: g.away?.name ?? null, homeName: g.home?.name ?? null, as: g.away?.score ?? null, hs: g.home?.score ?? null, hsp: g.home?.spread ?? null,
       q: g.state?.quarter ?? null, clock: g.state?.clock ?? null };
   }
   const entries = lb.data.map((e) => ({
