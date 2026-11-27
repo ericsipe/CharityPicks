@@ -34,6 +34,7 @@ button { cursor:pointer }
 .score { font-weight:600; font-variant-numeric:tabular-nums }
 .right { text-align:right; font-variant-numeric:tabular-nums }
 .side { color:var(--mut); font-size:13px; margin-top:2px } .side.best { color:var(--fg) }
+.side.cov { color:var(--fg) }
 .side.best::after { content:"  ◀ better for you"; color:var(--g); font-weight:600 }
 table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums } th { text-align:right; font-size:12px; color:var(--mut); font-weight:600; padding:4px 6px }
 td { padding:6px; border-top:1px solid var(--line); text-align:right } th:nth-child(2), td:nth-child(2) { text-align:left }
@@ -58,6 +59,7 @@ tr.me td { font-weight:700; background:var(--ybg) }
   <div class="card"><h2>How many 5-0 cards this week</h2><div class="splits" id="winners"></div><div id="ifIn"></div></div>
   <div class="card"><h2 id="fieldH">Still perfect</h2><div class="mut" id="fieldSum"></div><div id="field"></div><div id="fieldMore"></div></div>
   <div class="card"><h2>Games still to finish</h2><div class="mut" id="gamesSum"></div><div id="games"></div><div id="gamesMore"></div></div>
+  <div class="card"><h2>Finished games</h2><div class="mut" id="finSum"></div><div id="fin"></div><div id="finMore"></div></div>
   <div class="card"><h2>Season race</h2><div class="scroll"><table id="season"></table></div>
     <div class="mut" style="margin-top:6px">$6,200 to the best season record and $4,100 to second. Future weeks are simulated as coin flips for every entry.</div></div>
   <div class="mut">Picks and lines come from Splash (other entries' picks appear only once a game kicks off, or at the Saturday 10 AM lock). Scores come from ESPN every 30 seconds.
@@ -86,7 +88,7 @@ const phi = (x) => { const t = 1 / (1 + 0.2316419 * Math.abs(x)), d = 0.3989423 
   const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return x > 0 ? 1 - p : p; };
 const inv = (p) => { let lo = -6, hi = 6; for (let i = 0; i < 50; i++) { const m = (lo + hi) / 2; phi(m) < p ? lo = m : hi = m; } return (lo + hi) / 2; };
 
-let ALL = [], W = null, WI = 0, COVERS = {}, ESPN = {}, viewer = null, showAllField = false, showAllGames = false;
+let ALL = [], W = null, WI = 0, COVERS = {}, ESPN = {}, viewer = null, showAllField = false, showAllGames = false, showAllFin = false;
 
 /* ---------- ESPN live scores (same matching as app.js, plus possession) ---------- */
 const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/football/";
@@ -278,9 +280,26 @@ function render() {
     const score = s.state === "in" ? `${esc(g.away)} ${s.as} – ${esc(g.home)} ${s.hs}` : `${esc(g.away)} at ${esc(g.home)}`;
     return `<div class="row ${cls}"><div class="dot"></div><div><span class="score">${score}</span> <span class="mut">${esc(s.detail || "")}${s.state === "in" && s.spot ? " · " + esc(s.spot) : ""}${r.mine ? " · on the card" : ""}</span>` +
       line(r.goodHome) + line(!r.goodHome) + `</div><div class="right"><span class="pill ${cls}">${small ? "little effect" : s.state === "pre" ? "not started" : pct(q) + (q >= .5 ? " likely" : " unlikely")}</span></div></div>`; }).join("") ||
-    `<div class="mut">Every game this week is final.</div>`;
+    (S.locked ? `<div class="mut">Every game this week is final.</div>` : "");
   $("gamesMore").innerHTML = rows.length > list.length || showAllGames ? `<button id="gm">${showAllGames ? "Show only the games that matter" : "Show all " + rows.length + " games"}</button>` : "";
   if ($("gm")) $("gm").onclick = () => { showAllGames = !showAllGames; render(); };
+  // finished games: who had each side, newest first (11/27/26: a game left the page the moment it went final)
+  const fin = Object.keys(S.G).filter((gid) => S.G[gid].state === "post").map((gid) => {
+    const by = (home) => S.E.filter((x) => x.picks.some((p) => p.gid === gid && p.home === home));
+    return { gid, g: W.games[gid], s: S.G[gid], homeCov: S.G[gid].p === 1, home: by(true), away: by(false) };
+  }).filter((r) => r.home.length + r.away.length).sort((a, b) => b.g.start.localeCompare(a.g.start));
+  const finList = showAllFin ? fin : fin.slice(0, 6);
+  $("finSum").textContent = fin.length ? `${fin.length} game${fin.length > 1 ? "s" : ""} decided with revealed picks; the side that covered the pool number is marked ✓.` : "No game with a revealed pick has finished yet.";
+  $("fin").innerHTML = finList.map((r) => { const { g, s } = r, mine = me.picks.find((p) => p.gid === r.gid), myHit = mine ? mine.home === r.homeCov : null;
+    const cls = mine ? (myHit ? "G" : "R") : "N";
+    const names = (list) => { const nm = list.map((x) => x === me ? `<b>${esc(x.name)}</b>` : esc(x.name));
+      return nm.length <= 12 ? nm.join(", ") : nm.slice(0, 12).join(", ") + ` and ${nm.length - 12} more`; };
+    const line = (home) => { const list = home ? r.home : r.away, cov = home === r.homeCov;
+      return `<div class="side${cov ? " cov" : ""}"><b>${esc(sideName(g, home))}</b> ${cov ? "✓ covered" : "✗"} · ${list.length} pick${list.length === 1 ? "" : "s"}${list.length ? ": " + names(list) : ""}</div>`; };
+    return `<div class="row ${cls}"><div class="dot"></div><div><span class="score">${esc(g.away)} ${s.as ?? ""} – ${esc(g.home)} ${s.hs ?? ""}</span> <span class="mut">Final · ${esc(ct(g.start, { weekday: "short", month: "numeric", day: "numeric" }))}</span>` +
+      line(r.homeCov) + line(!r.homeCov) + `</div><div class="right"><span class="pill ${cls}">${mine ? (myHit ? "✓ on the card" : "✗ on the card") : (r.home.length + r.away.length) + " picks"}</span></div></div>`; }).join("");
+  $("finMore").innerHTML = fin.length > 6 ? `<button id="fnm">${showAllFin ? "Show fewer" : "Show all " + fin.length + " games"}</button>` : "";
+  if ($("fnm")) $("fnm").onclick = () => { showAllFin = !showAllFin; render(); };
   // season
   const top = [...S.E].sort((a, b) => b.first - a.first || b.top2 - a.top2).slice(0, 8); if (!top.includes(me)) top.push(me);
   const pts = (x) => x.base + x.won, rk = (x) => 1 + S.E.filter((y) => pts(y) > pts(x)).length;

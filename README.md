@@ -9,7 +9,8 @@ Tracking pages for the "2026 Pick 5 For Charity" pool on Splash Sports.
 - `tracker.html`: the **week tracker**. It opens on the newest week that has picks and follows it from
   Tuesday through Monday: the tracked entry's chance to sweep, expected share of the weekly pot
   ($4,700, doubling on a rollover), how many 5-0 cards to expect, who is still perfect, which side
-  of each remaining game to root for and what it is worth, and the season race ($6,200 / $4,100).
+  of each remaining game to root for and what it is worth, each finished game with who had which side
+  (newest first), and the season race ($6,200 / $4,100).
   Entry dropdown (default The Daddies). 40,000 simulated weeks in the browser, refreshed every 30 s
   from ESPN. Week 17: 10 picks, the week's best score takes the pot, ties split.
   Test replay: `tracker.html?wk=11&asof=2026-11-22T15:30:00Z`.
